@@ -10,11 +10,11 @@
         </div> -->
 
         <div class="channel-header">
-            <h2>{{ groupName }}</h2>
+            <h2>{{ channelName }}</h2>
             <p>{{ users.length }} participants</p>
         </div>
 
-        <div class="message-list">
+        <div ref="messageContainer" class="message-list">
             <div v-for="(msg, index) in messages" :key="index" class="message"
                 :class="{ 'own-message': msg.user_uuid === currentUser.uuid }">
                 <strong :class="{ 'own-message-name': msg.user_uuid === currentUser.uuid }" class="message-name">
@@ -36,7 +36,7 @@
 
 
 <script setup lang="ts">
-    import { ref, onBeforeUnmount, computed, onMounted } from 'vue';
+    import { ref, onBeforeUnmount, computed, onMounted, watch } from 'vue';
     import { useEditor, EditorContent } from '@tiptap/vue-3';
     import StarterKit from '@tiptap/starter-kit';
     import Mention from '@tiptap/extension-mention';
@@ -47,15 +47,18 @@
     const appStore = useAppStore()
 
     // Group or Channel Name
-    const groupName = ref('Friends Chat'); // Customize your group/channel name
+    const channelName = computed(() => {
+        return appStore.selectedChannel.name
+    }); // Customize your group/channel name
 
     const users = computed(() => {
         return appStore.friends
     })
 
     const messages = computed(() => {
-        return appStore.messages
+        return appStore.getMessagesByChannel(appStore.selectedChannel)
     }) // Store chat messages
+
     const currentUser = computed(() => {
         return appStore.user
     })
@@ -69,6 +72,21 @@
         renderHTML({ node }) {
             return ['span', { class: 'mention' }, `@${node.attrs.label}`];
         },
+    });
+
+    const messageContainer = ref()
+
+    // Function to scroll to the bottom of the message list
+    const scrollToBottom = () => {
+        if (messageContainer.value) {
+            messageContainer.value.scrollTop = messageContainer.value.scrollHeight;
+        }
+    };
+
+    // Scroll to the bottom whenever messages change
+    watch(messages, () => {
+        console.log('Messages Watcher')
+        scrollToBottom();
     });
 
     // Initialize Tiptap Editor
@@ -153,6 +171,10 @@
         });
     }
 
+    onMounted(() => {
+        scrollToBottom();
+    })
+
     // Clean up Editor on Component Unmount
     onBeforeUnmount(() => {
         editor.value?.destroy();
@@ -218,6 +240,7 @@
         border-radius: 2rem;
         font-size: 14px;
         line-height: 1rem;
+        max-width: 45dvw;
     }
 
     .message-name {

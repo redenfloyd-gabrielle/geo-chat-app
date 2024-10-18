@@ -8,10 +8,15 @@
   const appStore = useAppStore()
 
   onMounted(() => {
-    appStore._generateFriends(10)
-    appStore._generateChannels(3)
-    appStore._generateMessage(100)
+    appStore._generateFriends(100)
+    appStore._generateChannels(5)
+    appStore._generateMessage(500)
     appStore.setRandomUser()
+    setTimeout(() => {
+      console.log('appStore.channels[0', appStore.channels[0])
+      const channel = appStore.channels[0]
+      appStore.selectChannel(channel)
+    }, 500);
   })
 </script>
 

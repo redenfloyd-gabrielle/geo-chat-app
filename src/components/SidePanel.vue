@@ -11,11 +11,15 @@
                 <h2>Channels</h2>
                 <button @click="addChannel">+</button>
             </div>
-            <ul>
-                <li v-for="(channel, index) in appStore.channels" :key="index">
-                    {{ channel.name }}
-                </li>
-            </ul>
+            <div class="ul-section">
+                <ul>
+                    <li v-for="(channel, index) in appStore.channels" :key="index"
+                        :class="{ active: channel.uuid === selectedChannel.uuid }"
+                        @click="appStore.selectChannel(channel)">
+                        {{ channel.name }}
+                    </li>
+                </ul>
+            </div>
         </section>
 
         <!-- Friends Section -->
@@ -24,17 +28,20 @@
                 <h2>Friends</h2>
                 <button @click="addFriend">+</button>
             </div>
-            <ul>
-                <li v-for="(friend, index) in appStore.friends" :key="index">
-                    {{ friend.fullname }}
-                </li>
-            </ul>
+            <div class="ul-section">
+                <ul>
+                    <li v-for="(friend, index) in appStore.friends" :key="index" :class="{ active: false }"
+                        @click="appStore.selectFriend(friend)">
+                        {{ friend.fullname }}
+                    </li>
+                </ul>
+            </div>
         </section>
     </div>
 </template>
 
 <script setup lang="ts">
-    import { ref } from "vue";
+    import { computed, ref } from "vue";
     import { useAppStore } from "../store/app";
 
     const channels = ref(["General", "Announcements", "Support"]);
@@ -50,16 +57,23 @@
         const name = prompt("Enter friend name:");
         if (name) friends.value.push(name);
     };
+
+    const selectedChannel = computed(() => {
+        return appStore.selectedChannel
+    })
+
 </script>
 
 <style scoped>
 
     .channels {
         flex: 1;
+        overflow: scroll;
     }
 
     .friends {
         flex: 1;
+        overflow: scroll;
     }
 
     .side-panel {
@@ -114,9 +128,30 @@
         color: black;
         padding: 0.5rem 0;
         border-bottom: 1px solid #ddd;
+        cursor: pointer;
+        /* Makes the list item feel clickable */
+        transition: background-color 0.3s ease;
+        /* Smooth transition */
+    }
+
+    /* Hover state with a light blue background */
+    li:hover {
+        background-color: #e0f3ff;
+        /* Light blue shade */
+    }
+
+    /* Active state with a deeper blue background */
+    li.active {
+        background-color: #b3e0ff;
+        /* Slightly darker blue shade */
     }
 
     h2 {
         color: black;
+    }
+
+    .ul-section {
+        height: 100%;
+        overflow: auto;
     }
 </style>

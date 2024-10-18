@@ -6,14 +6,15 @@ import { faker } from "@faker-js/faker";
 export const useAppStore = defineStore('app', () => {
     const user = ref({} as User)
     const friends = ref([] as User[])
+    const selectedFriend = ref({} as User)
 
     const channels = ref([] as Channel[])
-    const selectedChannel = ref<Channel>()
-    const thisChannels = ref<Channel>()
+    const selectedChannel = ref({} as Channel)
+    const thisChannel = ref({} as Channel)
 
     const messages = ref([] as Message[]) // per channel
-    const selectedMessage = ref<Message>()
-    const thisMessage = ref<Message>()
+    const selectedMessage = ref({} as Message)
+    const thisMessage = ref({} as Message)
 
     // Computed Functions
 
@@ -25,6 +26,19 @@ export const useAppStore = defineStore('app', () => {
 
     const setRandomUser = () => {
         user.value = friends.value[faker.number.int({ max: 9 })]
+    }
+
+    const selectChannel = (payload: Channel) => {
+        selectedChannel.value = payload
+        thisChannel.value = { ...payload }
+    }
+
+    const selectFriend = (payload: User) => {
+        selectedFriend.value = payload
+    }
+
+    const getMessagesByChannel = (payload: Channel) => {
+        return messages.value.filter(m => m.channel_uuid === payload.uuid)
     }
 
     // Faker
@@ -76,12 +90,16 @@ export const useAppStore = defineStore('app', () => {
         friends,
         channels,
         selectedChannel,
-        thisChannels,
+        thisChannel,
         messages,
         selectedMessage,
         thisMessage,
         getUserFullname,
+        selectedFriend,
         setRandomUser,
+        getMessagesByChannel,
+        selectChannel,
+        selectFriend,
         _generateFriends,
         _generateChannels,
         _generateMessage,
