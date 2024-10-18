@@ -1,9 +1,22 @@
 <script setup>
   import HelloWorld from './components/HelloWorld.vue'
+  import Chat from './components/chat.vue'
+  import SidePanel from './components/SidePanel.vue';
+  import { onMounted } from 'vue';
+  import { useAppStore } from './store/app';
+
+  const appStore = useAppStore()
+
+  onMounted(() => {
+    appStore._generateFriends(10)
+    appStore._generateChannels(3)
+    appStore._generateMessage(100)
+    appStore.setRandomUser()
+  })
 </script>
 
 <template>
-  <div>
+  <!-- <div>
     <a href="https://vitejs.dev" target="_blank">
       <img src="/vite.svg" class="logo" alt="Vite logo" />
     </a>
@@ -47,7 +60,11 @@
       <img src="./assets/vue.svg" class="logo vue" alt="Vue logo" />
     </a>
   </div>
-  <HelloWorld msg="Vite + Vue" />
+  <HelloWorld msg="Vite + Vue" /> -->
+
+  <SidePanel />
+  <Chat />
+
 </template>
 
 <style scoped>
