@@ -23,6 +23,8 @@ export const useAppStore = defineStore('app', () => {
 
     const decryptMessages = ref([] as string[])
 
+    const isMapView = ref(false)
+
     // Computed Functions
 
     const getUserFullname = computed(() => (uuid: string) => {
@@ -55,6 +57,10 @@ export const useAppStore = defineStore('app', () => {
 
     const getMessagesByChannel = (payload: Channel) => {
         return messages.value.filter(m => m.channel_uuid === payload.uuid)
+    }
+
+    const addChannel = (payload: Channel) => {
+        channels.value.push(payload)
     }
 
     // Faker
@@ -115,13 +121,15 @@ export const useAppStore = defineStore('app', () => {
         thisMessage,
         getUserFullname,
         selectedFriend,
+        decryptMessages,
+        isMapView,
         encryptMessage,
         decryptMessage,
-        decryptMessages,
         setRandomUser,
         getMessagesByChannel,
         selectChannel,
         selectFriend,
+        addChannel,
         _generateFriends,
         _generateChannels,
         _generateMessage,

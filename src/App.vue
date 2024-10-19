@@ -1,12 +1,15 @@
 <template>
   <main>
     <aside class="left">
-      <SidePanel  />
+      <SidePanel />
     </aside>
-    <section> 
-      <Chat /> 
+    <section>
+      <Chat />
       <Map />
     </section>
+    <aside class="right">
+      <UserForm :initialUser="loginUser" @submit="handleFormSubmit" @cancel="closeForm" />
+    </aside>
   </main>
 </template>
 
@@ -14,10 +17,15 @@
   import Chat from './components/chat.vue'
   import SidePanel from './components/SidePanel.vue';
   import Map from './components/Map.vue';
-  import { onMounted } from 'vue';
+  import { computed, onMounted } from 'vue';
   import { useAppStore } from './stores/app';
+  import UserForm from './components/form/UserForm.vue';
 
   const appStore = useAppStore()
+
+  const loginUser = computed(() => {
+    return appStore.user
+  })
 
   onMounted(() => {
     appStore._generateFriends(100)

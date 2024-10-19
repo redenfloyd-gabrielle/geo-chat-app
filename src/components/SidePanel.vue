@@ -1,15 +1,15 @@
 <template>
     <div class="side-panel">
         <!-- Header Section -->
-        <header class="header">
+        <section class="side-panel-header">
             <h1>Chat - Geo</h1>
-        </header>
+        </section>
 
         <!-- Channels Section -->
         <section class="channels">
             <div class="section-header">
                 <h2>Channels</h2>
-                <button @click="addChannel">+</button>
+                <button @click="showAddChannelModal = true">+</button>
             </div>
             <div class="ul-section">
                 <ul>
@@ -26,7 +26,7 @@
         <section class="friends">
             <div class="section-header">
                 <h2>Friends</h2>
-                <button @click="addFriend">+</button>
+                <button @click="showAddFriendModal = true">+</button>
             </div>
             <div class="ul-section">
                 <ul>
@@ -38,24 +38,33 @@
             </div>
         </section>
     </div>
+    <AddChannelModal :isOpen="showAddChannelModal" :friends="friends" @close="showAddChannelModal = false"
+        @add-channel="addChannel" />
+    <AddFriendModal :isOpen="showAddFriendModal" @close="showAddFriendModal = false" @friend-added="addFriend" />
 </template>
 
 <script setup lang="ts">
     import { computed, ref } from "vue";
     import { useAppStore } from "../stores/app";
+    import AddChannelModal from './modal/AddChannelModal.vue'; // Adjust path as needed
+    import AddFriendModal from "./modal/AddFriendModal.vue";
 
-    const channels = ref(["General", "Announcements", "Support"]);
-    const friends = ref(["Alice", "Bob", "Charlie"]);
     const appStore = useAppStore()
+    const showAddChannelModal = ref(false)
+    const showAddFriendModal = ref(false)
 
-    const addChannel = () => {
-        const name = prompt("Enter channel name:");
-        if (name) channels.value.push(name);
+    const friends = ref(appStore.friends)
+
+    // Handle adding a new channel
+    const addChannel = (channel: any) => {
+        console.log('New Channel:', channel);
+        appStore.addChannel(channel)
     };
 
-    const addFriend = () => {
-        const name = prompt("Enter friend name:");
-        if (name) friends.value.push(name);
+    // Handle adding friend
+    const addFriend = (email: string) => {
+        console.log('Friend email:', email);
+        // Call backend API to add friend or update friends list
     };
 
     const selectedChannel = computed(() => {
@@ -77,16 +86,20 @@
     }
 
     .side-panel {
-        width: 100%;
+        width: auto;
         background-color: #f3f4f6;
-        /* padding: 1rem; */
+        padding: 0 1rem;
         display: flex;
         flex-direction: column;
         gap: 1.5rem;
         border-right: 1px solid #ddd;
     }
 
-    .header h1 {
+    .side-panel-header {
+        padding-top: 1rem;
+    }
+
+    .side-panel-header h1 {
         font-size: 1.5rem;
         margin: 0;
         color: #333;

@@ -42,8 +42,8 @@
     import StarterKit from '@tiptap/starter-kit';
     import Mention from '@tiptap/extension-mention';
     import Image from '@tiptap/extension-image'
-    import { useAppStore } from '../store/app';
-    import { Message } from '../store/types';
+    import { Message } from '../stores/types';
+    import { useAppStore } from '../stores/app';
 
     // Variable Declaration
     const appStore = useAppStore()

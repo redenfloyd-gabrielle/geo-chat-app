@@ -1,20 +1,6 @@
-export enum WS_EVENT {
-  // Tour Events
-  TOUR_MoveToPoint = "TOUR:Move_to_Point",
-  TOUR_PanelVideoPause = "TOUR:Panel_Video_Pause",
-  TOUR_PanelVideoPlay = "TOUR:Panel_Video_Play",
-  TOUR_PanelVideoMute = "TOUR:Panel_Video_Mute",
-  TOUR_PanelVideoUnmute = "TOUR:Panel_Video_Unmute",
-  TOUR_CameraAudioPause = "TOUR:Camera_Audio_Pause",
-  TOUR_CameraAudioPlay = "TOUR:Camera_Audio_Play",
-  TOUR_AutoplayChangeState = "TOUR:Autoplay_Change_State",
-  TOUR_AutoplaySkipPoint = "TOUR:Autoplay_Skip_Point",
-  TOUR_AutoplayJumpToPoint = "TOUR:Autoplay_Jump_Point",
-  TOUR_SetShareExperienceSnapshot = "TOUR:Set_Share_Experience_Snapshot",
-
-  // Application Events
-  APP_MenuClick = "APP:Menu_Click",
-  APP_ActionBarClick = "APP:Action_Bar_Click",
+export enum CHANNEL_TYPE {
+  GROUP = "Group",
+  DIRECT_MESSAGE = "Direct Message",
 }
 
 export interface User {
@@ -29,7 +15,7 @@ export interface Channel {
   uuid: string,
   name: string,
   user_uuids: string[],
-  type: boolean,
+  type: CHANNEL_TYPE,
   created_on: string
 }
 
@@ -49,4 +35,10 @@ export interface Location {
   longitude: string,
   weather?: string
   modified_on: number
+}
+
+export interface Friend {
+  user1_uuid: string;  // UUID of the first user
+  user2_uuid: string;  // UUID of the second user
+  created_on: string;  // Timestamp when they became friends
 }
