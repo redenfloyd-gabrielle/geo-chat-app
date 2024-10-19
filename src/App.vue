@@ -10,7 +10,7 @@
   onMounted(() => {
     appStore._generateFriends(100)
     appStore._generateChannels(5)
-    appStore._generateMessage(500)
+    appStore._generateMessage(20)
     appStore.setRandomUser()
     setTimeout(() => {
       console.log('appStore.channels[0', appStore.channels[0])

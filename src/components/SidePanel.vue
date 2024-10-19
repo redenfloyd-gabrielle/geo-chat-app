@@ -126,7 +126,7 @@
 
     li {
         color: black;
-        padding: 0.5rem 0;
+        padding: 0.5rem;
         border-bottom: 1px solid #ddd;
         cursor: pointer;
         /* Makes the list item feel clickable */

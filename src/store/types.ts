@@ -28,7 +28,8 @@ export interface User {
 export interface Channel {
   uuid: string,
   name: string,
-  user_uuid: string[],
+  user_uuids: string[],
+  type: boolean,
   created_on: string
 }
 

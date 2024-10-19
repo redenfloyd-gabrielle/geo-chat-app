@@ -2,6 +2,7 @@ import { defineStore } from "pinia";
 import { computed, ref, watch } from "vue";
 import { Message, User, Channel } from "./types";
 import { faker } from "@faker-js/faker";
+import { useSecureStore } from "./secure";
 
 export const useAppStore = defineStore('app', () => {
     const user = ref({} as User)
@@ -16,11 +17,26 @@ export const useAppStore = defineStore('app', () => {
     const selectedMessage = ref({} as Message)
     const thisMessage = ref({} as Message)
 
+    const secureStore = useSecureStore()
+
+    const secretString = '3a7eca62-bdc6-44f0-8f3e-abf909c44cf7' // this should be moved to .env
+
+    const decryptMessages = ref([] as string[])
+
     // Computed Functions
 
     const getUserFullname = computed(() => (uuid: string) => {
         return friends.value.find(f => f.uuid === uuid)?.fullname
     })
+
+    const encryptMessage = async (message: string) => {
+        return await secureStore.encryptMessage(secretString, message)
+    }
+
+    const decryptMessage = async (message: string): Promise<string> => {
+        const _message = secureStore.decryptMessage(secretString, message)
+        return await _message
+    }
 
     // Methods
 
@@ -69,19 +85,22 @@ export const useAppStore = defineStore('app', () => {
         }
     }
 
-    const _generateMessage = (n: number) => {
+    const _generateMessage = async (n: number) => {
+        let _messages = [] as Message[]
         for (let index = 0; index < n; index++) {
             const newMessage = {
                 uuid: faker.string.uuid(),
                 channel_uuid: faker.helpers.arrayElement(channels.value).uuid,
                 user_uuid: faker.helpers.arrayElement(friends.value).uuid,
-                message: faker.lorem.lines(3),
+                message: await secureStore.encryptMessage(secretString, faker.lorem.paragraphs(2)),
                 created_on: faker.number.int({ min: 99999 }),
 
             } as Message
 
-            messages.value?.push(newMessage)
+            _messages.push(newMessage)
         }
+
+        messages.value.push(..._messages)
     }
 
 
@@ -96,6 +115,9 @@ export const useAppStore = defineStore('app', () => {
         thisMessage,
         getUserFullname,
         selectedFriend,
+        encryptMessage,
+        decryptMessage,
+        decryptMessages,
         setRandomUser,
         getMessagesByChannel,
         selectChannel,

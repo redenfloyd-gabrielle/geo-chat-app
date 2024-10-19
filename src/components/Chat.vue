@@ -10,8 +10,8 @@
         </div> -->
 
         <div class="channel-header">
-            <h2>{{ channelName }}</h2>
-            <p>{{ users.length }} participants</p>
+            <h2>{{ channel.name }}</h2>
+            <p>{{ channelParticipants ?? 0 }} participants</p>
         </div>
 
         <div ref="messageContainer" class="message-list">
@@ -20,7 +20,8 @@
                 <strong :class="{ 'own-message-name': msg.user_uuid === currentUser.uuid }" class="message-name">
                     {{ appStore.getUserFullname(msg.user_uuid) }}</strong>
                 <span :class="{ 'own-message-content': msg.user_uuid === currentUser.uuid }" class="message-content"
-                    v-html="msg.message"></span>
+                    v-html="appStore.decryptMessages[index]">
+                </span>
             </div>
         </div>
 
@@ -43,13 +44,10 @@
     import Image from '@tiptap/extension-image'
     import { useAppStore } from '../store/app';
     import { Message, User } from '../store/types';
+    import { useSecureStore } from '../store/secure';
 
+    // Variable Declaration
     const appStore = useAppStore()
-
-    // Group or Channel Name
-    const channelName = computed(() => {
-        return appStore.selectedChannel.name
-    }); // Customize your group/channel name
 
     const users = computed(() => {
         return appStore.friends
@@ -58,6 +56,15 @@
     const messages = computed(() => {
         return appStore.getMessagesByChannel(appStore.selectedChannel)
     }) // Store chat messages
+
+    const channel = computed(()=>{
+        console.log('appStore.selectedChannel', appStore.selectedChannel)
+        return appStore.selectedChannel
+    })
+
+    const channelParticipants = computed(()=>{
+        return appStore.selectedChannel.user_uuids?.length
+    })
 
     const currentUser = computed(() => {
         return appStore.user
@@ -76,18 +83,14 @@
 
     const messageContainer = ref()
 
+    // Functions
+
     // Function to scroll to the bottom of the message list
     const scrollToBottom = () => {
         if (messageContainer.value) {
             messageContainer.value.scrollTop = messageContainer.value.scrollHeight;
         }
     };
-
-    // Scroll to the bottom whenever messages change
-    watch(messages, () => {
-        console.log('Messages Watcher')
-        scrollToBottom();
-    });
 
     // Initialize Tiptap Editor
     const editor = useEditor({
@@ -113,13 +116,14 @@
     });
 
     // Send Message Handler
-    const sendMessage = () => {
+    const sendMessage = async () => {
         if (editor.value) {
             const content = editor.value.getHTML().trim();
             if (content) {
                 const newMessage = {
                     user_uuid: currentUser.value.uuid,
-                    message: content
+                    channel_uuid: appStore.selectedChannel.uuid,
+                    message: await appStore.encryptMessage(content)
                 } as Message
                 appStore.messages.push(newMessage);
                 editor.value.commands.clearContent();
@@ -157,19 +161,18 @@
         }
     };
 
-    const fileToBase64 = (file: File): Promise<string> => {
-        return new Promise((resolve, reject) => {
-            const reader = new FileReader();
-            reader.onloadend = () => {
-                const result = reader.result as string;
-                resolve(result);
-            };
-            reader.onerror = (error) => {
-                reject(error);
-            };
-            reader.readAsDataURL(file);
-        });
-    }
+    // Watchers
+    // Scroll to the bottom whenever messages change
+    watch(messages, (value, _) => {
+        scrollToBottom();
+
+        value.forEach(async (m, i) => {
+            const res = await appStore.decryptMessage(m.message)
+            appStore.decryptMessages[i] = res
+        })
+    });
+
+    // Vue lifecycle
 
     onMounted(() => {
         scrollToBottom();
@@ -237,7 +240,7 @@
         color: white;
         background: #4c4c4c;
         padding: 10px;
-        border-radius: 2rem;
+        border-radius: 1rem;
         font-size: 14px;
         line-height: 1rem;
         max-width: 45dvw;
