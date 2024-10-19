@@ -71,7 +71,7 @@ export const useMapStore = defineStore('mapStore', () => {
         waypoints: coordinates.value.map(coord => L.latLng(coord[0], coord[1])),
         // routeWhileDragging: false,
         createMarker: () => { return null; },
-        // fitSelectedRoutes: true,
+        fitSelectedRoutes: true,
         // showAlternatives: false,
         // altLineOptions: { // Styling for alternative routes
         //   styles: [{ color: '#00FF00', opacity: 1, weight: 5,}],
