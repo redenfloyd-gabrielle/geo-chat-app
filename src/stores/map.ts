@@ -1,21 +1,26 @@
 import { defineStore } from 'pinia';
 import { computed, ref, watch } from 'vue';
 import L from 'leaflet';
-import 'leaflet/dist/leaflet.css';
-import { faker } from '@faker-js/faker';
+import 'leaflet-routing-machine'; 
+import { fa, faker } from '@faker-js/faker';
+import { useAppStore } from './app';
 
 export const useMapStore = defineStore('mapStore', () => {
+  
+  const appStore = useAppStore()
   //
-  const coordinates = ref<[number, number]>([10.31672, 123.89071]);
+  const thisCoordinates = ref<[number, number]>([10.31672, 123.89071]);
+  const coordinates = ref<Array<[number, number]>>([]);
   const zoom = ref(17);  
   const map = ref<L.Map | null>(null);
   const isLoading = ref(false)
   const weather = ref('')
   const location = ref('')
-
+  const  routingControl = ref(); 
+  
   const mapInstance = computed(() => (mapId: string) => {
     if (!map.value) {
-      map.value = L.map(mapId).setView(coordinates.value, 13);
+      map.value = L.map(mapId).setView(thisCoordinates.value, 13);
       
       L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         attribution: '&copy; OpenStreetMap contributors',
@@ -40,7 +45,7 @@ export const useMapStore = defineStore('mapStore', () => {
     }
   });
 
-  watch(() => coordinates.value, (newValue, oldValue) => {
+  watch(() => thisCoordinates.value, (newValue, oldValue) => {
 
     if (JSON.stringify(newValue) !== JSON.stringify(oldValue)){
 
@@ -55,10 +60,42 @@ export const useMapStore = defineStore('mapStore', () => {
       });
 
       L.marker(newValue, {icon: avatar}).addTo(map.value as L.Map)
-       .bindPopup(weather.value + '<br>' + location.value)
+       .bindPopup(weather.value + '<br>' + location.value + '<br>'+ 'Me')
        .openPopup();
     }
   })
+
+  watch(coordinates.value, (newValue) => {
+    if (newValue.length > 1) {
+      routingControl.value =  L.Routing.control({
+        waypoints: coordinates.value.map(coord => L.latLng(coord[0], coord[1])),
+        // routeWhileDragging: false,
+        createMarker: () => { return null; },
+        // fitSelectedRoutes: true,
+        // showAlternatives: false,
+        // altLineOptions: { // Styling for alternative routes
+        //   styles: [{ color: '#00FF00', opacity: 1, weight: 5,}],
+        //   extendToWaypoints: false, 
+        //   missingRouteTolerance: 0
+        // },
+        lineOptions: { // Styling for the main route
+          styles: [{ color: '#FF0000', opacity: 1, weight: 3}],
+          extendToWaypoints: false,
+          missingRouteTolerance: 0
+        },
+        // draggableWaypoints: true,
+        // animate: true,
+        // animationDuration: 1000,
+      }).addTo(map.value as L.Map);
+    
+      //remove the routing list container 
+      const container = routingControl.value.getContainer()
+      const parentNode = container.parentNode
+      parentNode.removeChild(container)
+    } 
+  });
+
+
 
   watch(isLoading, async (value)=>{
     if(value){
@@ -72,13 +109,15 @@ export const useMapStore = defineStore('mapStore', () => {
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
         async (position) => {
+
           const lat = position.coords.latitude;
           const long = position.coords.longitude;
          
           try {
               weather.value = await getWeather(lat, long)
               location.value = await getLocation(lat, long)
-              coordinates.value = [lat, long];
+              thisCoordinates.value = [lat, long];
+              coordinates.value.push([lat, long])
               isLoading.value = false;
          
               console.error("No data available");
@@ -153,7 +192,8 @@ export const useMapStore = defineStore('mapStore', () => {
       const location = await getLocation(lat, long)
 
       L.marker([lat,long], {icon: avatar}).addTo(map.value as L.Map)
-       .bindPopup(weather + '<br>' + location)
+       .bindPopup(weather + '<br>' + location + '<br>' + appStore.friends[i].fullname)
+       coordinates.value.push([lat, long])
     }
   }
 
