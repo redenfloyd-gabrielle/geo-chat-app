@@ -41,8 +41,8 @@
     import StarterKit from '@tiptap/starter-kit';
     import Mention from '@tiptap/extension-mention';
     import Image from '@tiptap/extension-image'
-    import { useAppStore } from '../store/app';
-    import { Message, User } from '../store/types';
+    import { useAppStore } from '../stores/app';
+    import { Message, User } from '../stores/types';
 
     const appStore = useAppStore()
 
@@ -182,10 +182,16 @@
     }
 
     .chat-container {
+        border-top-left-radius:10px ;
+        border-top-right-radius: 10px;
+        bottom: 0;
+        right: 90px;
+        z-index: 9999;
+        position: absolute;
         display: flex;
         flex-direction: column;
-        width: 100%;
-        height: 100%;
+        width: 328px;
+        height: 500px;
         /* margin: 50px auto; */
         border: 1px solid #ddd;
         /*border-radius: 8px;*/

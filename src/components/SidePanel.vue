@@ -35,7 +35,7 @@
 
 <script setup lang="ts">
     import { ref } from "vue";
-    import { useAppStore } from "../store/app";
+    import { useAppStore } from "../stores/app";
 
     const channels = ref(["General", "Announcements", "Support"]);
     const friends = ref(["Alice", "Bob", "Charlie"]);
@@ -63,9 +63,9 @@
     }
 
     .side-panel {
-        width: 25dvw;
+        width: 100%;
         background-color: #f3f4f6;
-        padding: 1rem;
+        /* padding: 1rem; */
         display: flex;
         flex-direction: column;
         gap: 1.5rem;
