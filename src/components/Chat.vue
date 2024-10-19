@@ -43,8 +43,7 @@
     import Mention from '@tiptap/extension-mention';
     import Image from '@tiptap/extension-image'
     import { useAppStore } from '../store/app';
-    import { Message, User } from '../store/types';
-    import { useSecureStore } from '../store/secure';
+    import { Message } from '../store/types';
 
     // Variable Declaration
     const appStore = useAppStore()
@@ -57,12 +56,12 @@
         return appStore.getMessagesByChannel(appStore.selectedChannel)
     }) // Store chat messages
 
-    const channel = computed(()=>{
+    const channel = computed(() => {
         console.log('appStore.selectedChannel', appStore.selectedChannel)
         return appStore.selectedChannel
     })
 
-    const channelParticipants = computed(()=>{
+    const channelParticipants = computed(() => {
         return appStore.selectedChannel.user_uuids?.length
     })
 
@@ -207,10 +206,16 @@
     }
 
     .chat-container {
+        border-top-left-radius: 10px;
+        border-top-right-radius: 10px;
+        bottom: 0;
+        right: 90px;
+        z-index: 9999;
+        position: absolute;
         display: flex;
         flex-direction: column;
-        width: 100%;
-        height: 100%;
+        width: 328px;
+        height: 500px;
         /* margin: 50px auto; */
         border: 1px solid #ddd;
         /*border-radius: 8px;*/
