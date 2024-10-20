@@ -19,15 +19,20 @@
   import Map from './components/Map.vue';
   import { computed, onMounted } from 'vue';
   import { useAppStore } from './stores/app';
+  import { useWsStore } from './stores/ws.js'
   import UserForm from './components/form/UserForm.vue';
 
   const appStore = useAppStore()
+  const wsStore = useWsStore()
 
   const loginUser = computed(() => {
     return appStore.user
   })
 
   onMounted(() => {
+
+    wsStore.connect()
+    wsStore.joinChannel('test')
     appStore._generateFriends(100)
     appStore._generateChannels(5)
     appStore._generateMessage(20)
