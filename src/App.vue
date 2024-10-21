@@ -1,34 +1,15 @@
 <template>
-  <main>
-    <aside class="left">
-      <SidePanel />
-    </aside>
-    <section>
-      <Chat />
-      <Map />
-    </section>
-    <aside class="right">
-      <UserForm :initialUser="loginUser" @submit="handleFormSubmit" @cancel="closeForm" />
-    </aside>
-  </main>
+  <RouterView />
 </template>
 
 <script setup>
-  import Chat from './components/chat.vue'
-  import SidePanel from './components/SidePanel.vue';
-  import Map from './components/Map.vue';
-  import { computed, onMounted } from 'vue';
   import { useAppStore } from './stores/app';
-  import UserForm from './components/form/UserForm.vue';
+  import { onMounted } from 'vue';
 
   const appStore = useAppStore()
 
-  const loginUser = computed(() => {
-    return appStore.user
-  })
-
   onMounted(() => {
-    appStore._generateFriends(100)
+    appStore._generateFriends(5)
     appStore._generateChannels(5)
     appStore._generateMessage(20)
     appStore.setRandomUser()

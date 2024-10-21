@@ -1,13 +1,8 @@
 <template>
     <div class="chat-container">
-        <!-- <div class="user-selector">
-            <label for="user">Select User:</label>
-            <select v-model="currentUser" id="user">
-                <option v-for="user in users" :key="user.id" :value="user">
-                    {{ user.username }}
-                </option>
-            </select>
-        </div> -->
+        <div class="btn-container">
+            <button class="btn btn-secondary" @click="appStore.mapBtnClick"> Map </button>
+        </div>
 
         <div class="channel-header">
             <h2>{{ channel.name }}</h2>
@@ -15,11 +10,11 @@
         </div>
 
         <div ref="messageContainer" class="message-list">
-            <div v-for="(msg, index) in messages" :key="index" class="message"
-                :class="{ 'own-message': msg.user_uuid === currentUser.uuid }">
-                <strong :class="{ 'own-message-name': msg.user_uuid === currentUser.uuid }" class="message-name">
+            <div v-for="(msg, index) in appStore.selectedMessages" :key="index" class="message"
+                :class="{ 'own-message': msg.user_uuid === appStore.user.uuid }">
+                <strong :class="{ 'own-message-name': msg.user_uuid === appStore.user.uuid }" class="message-name">
                     {{ appStore.getUserFullname(msg.user_uuid) }}</strong>
-                <span :class="{ 'own-message-content': msg.user_uuid === currentUser.uuid }" class="message-content"
+                <span :class="{ 'own-message-content': msg.user_uuid === appStore.user.uuid }" class="message-content"
                     v-html="appStore.decryptMessages[index]">
                 </span>
             </div>
@@ -44,17 +39,15 @@
     import Image from '@tiptap/extension-image'
     import { Message } from '../stores/types';
     import { useAppStore } from '../stores/app';
+    import { useRouter } from 'vue-router';
 
     // Variable Declaration
     const appStore = useAppStore()
+    const router = useRouter()
 
     const users = computed(() => {
         return appStore.friends
     })
-
-    const messages = computed(() => {
-        return appStore.getMessagesByChannel(appStore.selectedChannel)
-    }) // Store chat messages
 
     const channel = computed(() => {
         console.log('appStore.selectedChannel', appStore.selectedChannel)
@@ -65,9 +58,6 @@
         return appStore.selectedChannel.user_uuids?.length
     })
 
-    const currentUser = computed(() => {
-        return appStore.user
-    })
     let attachedFile = ref();
 
     // Ref to access the file input element
@@ -83,7 +73,6 @@
     const messageContainer = ref()
 
     // Functions
-
     // Function to scroll to the bottom of the message list
     const scrollToBottom = () => {
         if (messageContainer.value) {
@@ -120,7 +109,7 @@
             const content = editor.value.getHTML().trim();
             if (content) {
                 const newMessage = {
-                    user_uuid: currentUser.value.uuid,
+                    user_uuid: appStore.user.uuid,
                     channel_uuid: appStore.selectedChannel.uuid,
                     message: await appStore.encryptMessage(content)
                 } as Message
@@ -160,17 +149,6 @@
         }
     };
 
-    // Watchers
-    // Scroll to the bottom whenever messages change
-    watch(messages, (value, _) => {
-        scrollToBottom();
-
-        value.forEach(async (m, i) => {
-            const res = await appStore.decryptMessage(m.message)
-            appStore.decryptMessages[i] = res
-        })
-    });
-
     // Vue lifecycle
 
     onMounted(() => {
@@ -206,21 +184,22 @@
     }
 
     .chat-container {
-        border-top-left-radius: 10px;
-        border-top-right-radius: 10px;
+        /* border-top-left-radius: 10px;
+        border-top-right-radius: 10px; */
         bottom: 0;
         right: 90px;
         z-index: 9999;
-        position: absolute;
+        /* position: absolute; */
         display: flex;
         flex-direction: column;
-        width: 328px;
-        height: 500px;
+        /* width: 328px;
+        height: 500px; */
         /* margin: 50px auto; */
         border: 1px solid #ddd;
         /*border-radius: 8px;*/
         overflow: hidden;
         font-family: Arial, sans-serif;
+        height: 100%;
     }
 
     .message-list {
@@ -339,5 +318,11 @@
 
     .suggestion-item:hover {
         background-color: #f1f1f1;
+    }
+
+    .btn-container {
+        position: absolute;
+        margin: 1rem 0;
+        z-index: 9999;
     }
 </style>

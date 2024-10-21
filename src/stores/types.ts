@@ -3,6 +3,12 @@ export enum CHANNEL_TYPE {
   DIRECT_MESSAGE = "Direct Message",
 }
 
+export enum LOGIN_STATUS {
+  SUCCESS = "Success",
+  USER_NOT_FOUND = "User not found",
+  INVALID_PASSWORD = "Invalid password",
+}
+
 export interface User {
   uuid: string,
   fullname: string,

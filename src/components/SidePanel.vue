@@ -37,6 +37,13 @@
                 </ul>
             </div>
         </section>
+
+        <!-- Logout Section -->
+        <section class="friends">
+            <div class="logout-section">
+                <button class="btn btn-primary" @click="appStore.logoutUser">Logout</button>
+            </div>
+        </section>
     </div>
     <AddChannelModal :isOpen="showAddChannelModal" :friends="friends" @close="showAddChannelModal = false"
         @add-channel="addChannel" />
@@ -75,14 +82,17 @@
 
 <style scoped>
 
-    .channels {
+    .channels .friends {
         flex: 1;
         overflow: scroll;
     }
 
-    .friends {
-        flex: 1;
-        overflow: scroll;
+    .logout-section {
+        display: flex;
+        border-top: solid black;
+        padding-top: 1rem;
+        justify-content: center;
+        align-items: center;
     }
 
     .side-panel {
@@ -164,7 +174,8 @@
     }
 
     .ul-section {
-        height: 100%;
+        /* height: 100%; */
+        height: 40vh;
         overflow: auto;
     }
 </style>
