@@ -128,18 +128,18 @@
         font-size: 1.2rem;
     }
 
-    button {
+    /* button {
         background-color: #4caf50;
         color: white;
         border: none;
         padding: 0.3rem 0.5rem;
         border-radius: 4px;
         cursor: pointer;
-    }
+    } */
 
-    button:hover {
+    /* button:hover {
         background-color: #45a049;
-    }
+    } */
 
     ul {
         list-style: none;
