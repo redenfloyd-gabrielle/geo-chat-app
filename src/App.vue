@@ -5,11 +5,16 @@
 <script setup>
   import { useAppStore } from './stores/app';
   import { onMounted } from 'vue';
+  import { useWsStore } from './stores/ws.js'
 
   const appStore = useAppStore()
+  const wsStore = useWsStore()
 
   onMounted(() => {
     appStore._generateFriends(5)
+
+    wsStore.connect()
+    wsStore.joinChannel('test')
     appStore._generateChannels(5)
     appStore._generateMessage(20)
     appStore.setRandomUser()
