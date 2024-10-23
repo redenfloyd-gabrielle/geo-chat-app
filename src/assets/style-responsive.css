@@ -1,0 +1,9 @@
+/* Responsive Design */
+@media (max-width: 768px) {
+  aside.left {
+    display: none;
+    grid-area: left-side;
+    width: 360px;
+    overflow: hidden;
+  }
+}

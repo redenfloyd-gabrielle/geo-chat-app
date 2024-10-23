@@ -9,9 +9,9 @@
   
         <RouterView />
       </section>
-      <aside class="right">
+      <!-- <aside class="right">
         <UserForm :initialUser="loginUser" @submit="handleFormSubmit" @cancel="closeForm" />
-      </aside>
+      </aside> -->
     </main>
   </template>
   

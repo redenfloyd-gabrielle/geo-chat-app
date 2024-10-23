@@ -54,6 +54,7 @@ export const useAppStore = defineStore('app', () => {
     }
 
     const selectChannel = (payload: Channel) => {
+        console.log('Select Channel : ', payload)
         selectedChannel.value = payload
         thisChannel.value = { ...payload }
     }

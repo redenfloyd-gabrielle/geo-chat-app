@@ -2,6 +2,7 @@
     <div class="chat-container">
         <div class="btn-container">
             <button class="btn btn-secondary" @click="appStore.mapBtnClick"> Map </button>
+            <button class="btn btn-secondary" @click="">Go Back</button>
         </div>
 
         <div class="channel-header">
@@ -22,8 +23,7 @@
 
         <div class="editor-container">
             <input hidden ref="fileInput" id="attachedFile" type="file" @change="handleFileUpload" class="file-input" />
-            <button @click="triggerFileInput" class="attach-file-button">Attach File
-            </button>
+            <button @click="triggerFileInput" class="attach-file-button">Attach File</button>
             <EditorContent :editor="editor" class="editor" @keydown="handleKeyDown" />
             <button @click="sendMessage" class="send-button">Send</button>
         </div>
@@ -164,7 +164,36 @@
 
 <style scoped>
 
-    /* Styling the chat interface */
+    .chat-container {
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+        max-width: 100%;
+        margin: 0 auto;
+        border: 1px solid #ddd;
+        font-family: Arial, sans-serif;
+        position: relative;
+    }
+
+    .btn-container {
+        display: flex;
+        justify-content: space-between;
+        padding: 10px;
+        background-color: #f0f0f0;
+        position: sticky;
+        top: 0;
+        z-index: 1000;
+    }
+
+    .btn-secondary {
+        padding: 8px 12px;
+        background-color: #4c4c4c;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+    }
+
     .channel-header {
         text-align: center;
         padding: 10px;
@@ -172,157 +201,84 @@
         color: white;
     }
 
-    .channel-header h2 {
-        margin: 0;
-        font-size: 18px;
-    }
-
-    .channel-header p {
-        margin: 0;
-        font-size: 14px;
-        opacity: 0.8;
-    }
-
-    .chat-container {
-        /* border-top-left-radius: 10px;
-        border-top-right-radius: 10px; */
-        bottom: 0;
-        right: 90px;
-        z-index: 9999;
-        /* position: absolute; */
-        display: flex;
-        flex-direction: column;
-        /* width: 328px;
-        height: 500px; */
-        /* margin: 50px auto; */
-        border: 1px solid #ddd;
-        /*border-radius: 8px;*/
-        overflow: hidden;
-        font-family: Arial, sans-serif;
-        height: 100%;
-    }
-
     .message-list {
         flex: 1;
         padding: 10px;
         overflow-y: auto;
-        height: 100%;
         background-color: #f9f9f9;
     }
 
     .message {
-        color: black;
         padding: 8px 12px;
         margin-bottom: 5px;
         border-radius: 6px;
         display: flex;
         flex-direction: column;
-        align-items: flex-start;
     }
 
     .message-content {
+        background-color: #4c4c4c;
         color: white;
-        background: #4c4c4c;
         padding: 10px;
-        border-radius: 1rem;
+        border-radius: 10px;
         font-size: 14px;
-        line-height: 1rem;
-        max-width: 45dvw;
-    }
-
-    .message-name {
-        font-size: 14px;
-        margin-left: 1rem;
+        max-width: 70%;
+        word-wrap: break-word;
     }
 
     .own-message {
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
         align-items: flex-end;
     }
 
     .own-message-content {
-        background: #0080ff;
-    }
-
-    .own-message-name {
-        display: none !important;
+        background-color: #0080ff;
     }
 
     .editor-container {
         display: flex;
-        align-items: center;
         padding: 10px;
-        background-color: #fff;
+        background-color: white;
         border-top: 1px solid #ddd;
+        align-items: center;
     }
 
     .editor {
-        color: black;
         flex: 1;
-        min-height: 50px;
-        padding: 8px;
+        padding: 10px;
         border: 1px solid #ddd;
         border-radius: 4px;
-        margin-right: 10px;
-        margin-left: 10px;
-        overflow-y: auto;
     }
 
-    .send-button {
+    .send-button,
+    .attach-file-button {
         padding: 8px 12px;
         background-color: #007bff;
-        color: #fff;
+        color: white;
         border: none;
         border-radius: 4px;
-        cursor: pointer;
+        margin-left: 10px;
     }
 
-    .send-button:hover {
+    .send-button:hover,
+    .attach-file-button:hover {
         background-color: #0056b3;
     }
 
-    .attach-file-button {
-        padding: 8px 12px;
-        background-color: #4c4c4c;
-        color: #fff;
-        border: none;
-        border-radius: 4px;
-        cursor: pointer;
-    }
+    /* Mobile Responsive Design */
+    @media (max-width: 768px) {
 
-    .attach-file-button:hover {
-        background-color: hsla(0, 0%, 30%, 0.75);
-    }
+        .message-content {
+            max-width: 90%;
+        }
 
-    .mention {
-        color: #007bff;
-        font-weight: bold;
-    }
+        .btn-container {
+            flex-direction: row;
+            gap: 10px;
+        }
 
-    .suggestion {
-        position: absolute;
-        background-color: white;
-        border: 1px solid #ddd;
-        border-radius: 4px;
-        z-index: 10;
-        max-height: 150px;
-        overflow-y: auto;
-    }
-
-    .suggestion-item {
-        padding: 8px;
-        cursor: pointer;
-    }
-
-    .suggestion-item:hover {
-        background-color: #f1f1f1;
-    }
-
-    .btn-container {
-        position: absolute;
-        margin: 1rem 0;
-        z-index: 9999;
+        .editor-container {
+            flex-direction: row;
+            gap: 10px;
+        }
     }
 </style>
