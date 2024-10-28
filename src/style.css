@@ -81,6 +81,12 @@ footer {
   display: inline-block;
 }
 
+.map-button-container{
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
 .send-location-btn {
   height: 50px;
   width: 150px;
@@ -89,6 +95,18 @@ footer {
   color: whitesmoke;
   border: 0;
   border-radius: 5px;
+  cursor: pointer;
+}
+
+.new-action-btn {
+  height: 50px;
+  width: 150px;
+  padding: 10px;
+  background-color: #6c757d;
+  color: whitesmoke;
+  border: 0;
+  border-radius: 5px;
+  cursor: pointer;
 }
 
 .sidebar-container {
@@ -210,4 +228,8 @@ li {
   line-height: 2rem;
   font-size: 1.5rem;
   padding: 10px 0;
+}
+
+.go-back-btn {
+  display: none;
 }

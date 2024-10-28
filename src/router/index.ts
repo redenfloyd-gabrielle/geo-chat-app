@@ -17,13 +17,19 @@ const router = createRouter({
       props: true,
       children: [
         {
-          path: 'chat',
+          path: '',
+          name: 'sidebar',
+          component: () => import('../components/SidePanel.vue'),
+          props: true,
+        },
+        {
+          path: 'chat/:uuid',
           name: 'chat',
           component: Chat,
           props: true,
         },
         {
-          path: 'map',
+          path: 'map/:uuid',
           name: 'map',
           component: Map,
           props: true,

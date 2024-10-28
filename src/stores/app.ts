@@ -10,6 +10,7 @@ export const useAppStore = defineStore('app', () => {
     const users = ref([] as User[])
     const friends = ref([] as User[])
     const selectedFriend = ref({} as User)
+    const thisFriend = ref({} as User)
 
     const channels = ref([] as Channel[])
     const selectedChannel = ref({} as Channel)
@@ -53,14 +54,15 @@ export const useAppStore = defineStore('app', () => {
         user.value = friends.value[faker.number.int({ max: 9 })]
     }
 
-    const selectChannel = (payload: Channel) => {
+    const setChannel = (payload?: Channel) => {
         console.log('Select Channel : ', payload)
-        selectedChannel.value = payload
-        thisChannel.value = { ...payload }
+        selectedChannel.value = payload ?? {} as Channel
+        thisChannel.value = { ...payload ?? {} as Channel }
     }
 
-    const selectFriend = (payload: User) => {
+    const setFriend = (payload: User) => {
         selectedFriend.value = payload
+        thisFriend.value = { ...payload }
     }
 
     const getMessagesByChannel = (payload: Channel) => {
@@ -118,6 +120,15 @@ export const useAppStore = defineStore('app', () => {
             decryptMessages.value[i] = res
         })
     });
+
+    watch(selectedChannel, (value, _) => {
+        if (value.uuid) {
+            router.push({ name: 'chat', params: { uuid: value.uuid } })
+        }
+        else {
+            router.push({ name: 'sidebar' })
+        }
+    })
 
     // Faker
     const _generateFriends = async (n: number) => {
@@ -192,12 +203,13 @@ export const useAppStore = defineStore('app', () => {
         isMapView,
         selectedMessages,
         users,
+        thisFriend,
         encryptMessage,
         decryptMessage,
         setRandomUser,
         getMessagesByChannel,
-        selectChannel,
-        selectFriend,
+        setChannel,
+        setFriend,
         addChannel,
         addUser,
         loginUser,

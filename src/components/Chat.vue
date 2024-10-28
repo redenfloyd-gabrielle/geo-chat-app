@@ -2,7 +2,7 @@
     <div class="chat-container">
         <div class="btn-container">
             <button class="btn btn-secondary" @click="appStore.mapBtnClick"> Map </button>
-            <button class="btn btn-secondary" @click="">Go Back</button>
+            <button class="btn btn-secondary go-back-btn" @click="appStore.setChannel()">Go Back</button>
         </div>
 
         <div class="channel-header">
@@ -37,7 +37,7 @@
     import StarterKit from '@tiptap/starter-kit';
     import Mention from '@tiptap/extension-mention';
     import Image from '@tiptap/extension-image'
-    import { Message } from '../stores/types';
+    import { Channel, Message } from '../stores/types';
     import { useAppStore } from '../stores/app';
     import { useRouter } from 'vue-router';
 

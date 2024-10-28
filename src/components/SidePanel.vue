@@ -9,13 +9,13 @@
         <section class="channels">
             <div class="section-header">
                 <h2>Channels</h2>
-                <button @click="showAddChannelModal = true">+</button>
+                <button @click="editChannel">+</button>
             </div>
             <div class="ul-section">
                 <ul>
                     <li v-for="(channel, index) in appStore.channels" :key="index"
                         :class="{ active: channel.uuid === selectedChannel.uuid }"
-                        @click="appStore.selectChannel(channel)">
+                        @click="appStore.setChannel(channel)">
                         <div>
                             {{ channel.name }}
                         </div>
@@ -29,12 +29,14 @@
         <section class="friends">
             <div class="section-header">
                 <h2>Friends</h2>
-                <button @click="showAddFriendModal = true">+</button>
+                <button @click="editFriend({} as User)">+</button>
             </div>
             <div class="ul-section">
                 <ul>
-                    <li v-for="(friend, index) in appStore.friends" :key="index">
-                        <div @click="appStore.selectFriend(friend)">
+                    <li v-for="(friend, index) in appStore.friends" :key="index"
+                        :class="{ active: friend.uuid === appStore.selectedFriend.uuid }"
+                        @click="appStore.setFriend(friend)">
+                        <div>
                             {{ friend.fullname }}
                         </div>
                         <button class="edit-button" @click="editFriend(friend)">Edit</button>
@@ -51,9 +53,10 @@
     </div>
 
     <!-- Modals -->
-    <AddChannelModal :isOpen="showAddChannelModal" :friends="friends" @close="showAddChannelModal = false"
-        @add-channel="addChannel" />
-    <AddFriendModal :isOpen="showAddFriendModal" @close="showAddFriendModal = false" @friend-added="addFriend" />
+    <AddChannelModal :isOpen="showAddChannelModal" :initialChannel="appStore.thisChannel" :friends="friends"
+        @close="showAddChannelModal = false" @add-channel="addChannel" />
+    <AddFriendModal :isOpen="showAddFriendModal" :friend="appStore.thisFriend" @close="showAddFriendModal = false"
+        @friend-added="addFriend" />
 </template>
 
 <script setup lang="ts">
@@ -61,6 +64,7 @@
     import { useAppStore } from "../stores/app";
     import AddChannelModal from './modal/AddChannelModal.vue'; // Adjust path as needed
     import AddFriendModal from "./modal/AddFriendModal.vue";
+    import { Channel, Friend, User } from "../stores/types";
 
     const appStore = useAppStore();
     const showAddChannelModal = ref(false);
@@ -80,11 +84,15 @@
     const editChannel = (channel: any) => {
         // Logic for editing a specific channel
         console.log('Edit Channel:', channel);
+        appStore.setChannel(channel ?? {} as Channel)
+        showAddChannelModal.value = true
     };
 
-    const editFriend = (friend: any) => {
+    const editFriend = (friend: User) => {
         // Logic for editing a specific friend
         console.log('Edit Friend:', friend);
+        appStore.setFriend(friend)
+        showAddFriendModal.value = true
     };
 
     const selectedChannel = computed(() => appStore.selectedChannel);
@@ -188,14 +196,5 @@
     .btn:hover {
         background-color: #0056b3;
         color: white;
-    }
-
-    /* Responsive Design */
-    @media (max-width: 768px) {
-        .side-panel {
-            /* width: 100%;
-            max-width: 100%; */
-            padding: 0.5rem;
-        }
     }
 </style>

@@ -45,7 +45,7 @@
             const respond = await appStore.loginUser(email.value, password.value)
 
             if (respond == LOGIN_STATUS.SUCCESS) {
-                router.push(`/${appStore.user.uuid}/chat`); // Example: Redirect to "/user_uuid"
+                router.push({ name: 'sidebar' }); // Example: Redirect to "/user_uuid"
             }
             else if (respond === LOGIN_STATUS.INVALID_PASSWORD) {
                 alert(respond);

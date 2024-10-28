@@ -21,7 +21,7 @@
     setTimeout(() => {
       console.log('appStore.channels[0', appStore.channels[0])
       const channel = appStore.channels[0]
-      appStore.selectChannel(channel)
+      appStore.setChannel(channel)
     }, 500);
   })
 </script>

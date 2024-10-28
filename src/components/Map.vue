@@ -2,10 +2,10 @@
   <div class="map-container">
     <Loading :is-show="mapStore.isLoading" />
 
-    <div class="top-header">
+    <!-- <div class="top-header">
       <button class="btn btn-primary" @click="appStore.messagesBtnClick"> Messages </button>
       <span>{{ mapStore.weather + '&nbsp' + mapStore.location }}</span>
-    </div>
+    </div> -->
     <div :class="mapStore.isLoading ? 'loading-screen loading' : ''">
       <div id="map"></div>
     </div>
