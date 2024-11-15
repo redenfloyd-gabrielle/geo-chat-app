@@ -23,8 +23,8 @@
 
   onMounted(async () => {
     mapStore.mapInstance('map')
-    await mapStore.GenerateFakeData(10)
-  });
+    mapStore._generateFakeData(10)
+  })
 
 </script>
 

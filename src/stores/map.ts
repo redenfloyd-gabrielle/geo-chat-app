@@ -20,43 +20,37 @@ export const useMapStore = defineStore('mapStore', () => {
   const routingControl = ref();
   const router = useRouter()
 
-  const mapInstance = computed(() => (mapId: string) => {
-    if (!map.value) {
-      map.value = L.map(mapId).setView(thisCoordinates.value, 13);
-
+  const mapInstance = computed(() => (mapId?: string ) => {
+      map.value =  L.map(mapId).setView(thisCoordinates.value, 13);
+      
       L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         attribution: '&copy; OpenStreetMap contributors',
       }).addTo(map.value as L.Map);
 
-      L.control.zoom({
-        position: 'topright'
-      }).addTo(map.value as L.Map);
-
-
       const sendLocatonControl = L.Control.extend({
         onAdd: function () {
-          // Create a container for the buttons
-          const container = L.DomUtil.create('div', 'map-button-container');
-
-          // Create the first button (SHARE LOCATION)
-          const shareLocationButton = L.DomUtil.create('button', 'send-location-btn', container);
-          shareLocationButton.innerHTML = 'SHARE LOCATION';
-          shareLocationButton.onclick = async () => {
-            isLoading.value = true;
+          const button = L.DomUtil.create('button', 'send-location-btn');
+          button.innerHTML = 'SEND LOCATION'; 
+          button.onclick = async() => {
+           isLoading.value = true
           };
-
-          // Create the second button (NEW BUTTON)
-          const newButton = L.DomUtil.create('button', 'new-action-btn', container);
-          newButton.innerHTML = 'Go Back';
-          newButton.onclick = () => {
-            router.push({ name: 'chat', params: { uuid: appStore.selectedChannel.uuid } })
-          };
-
-          return container;
+          return button;
         }
       });
+
+      const goBackControl = L.Control.extend({
+        onAdd: function () {
+          const button = L.DomUtil.create('button', 'new-action-btn');
+          button.innerHTML = 'Go Back'; 
+          button.onclick = async() => {
+            router.push({ name: 'chat', params: { uuid: appStore.selectedChannel.uuid } })
+          };
+          return button;
+        }
+      });
+
       new sendLocatonControl({ position: 'topright' }).addTo(map.value as L.Map);
-    }
+      new goBackControl({ position: 'topright' }).addTo(map.value as L.Map);
   });
 
   watch(() => thisCoordinates.value, (newValue, oldValue) => {
@@ -177,8 +171,9 @@ export const useMapStore = defineStore('mapStore', () => {
   }
 
 
-  const GenerateFakeData = async (length: number) => {
-
+  const _generateFakeData = async (length: number) => {
+    
+    coordinates.value.splice(0, length); //for faker only remove first 10 items
     for (let i = 0; i < length; i++) {
       //cebu city coordinates 
       const latitudeRange = { min: 10.2599, max: 10.4076 };
@@ -220,6 +215,6 @@ export const useMapStore = defineStore('mapStore', () => {
     weather,
     location,
     getLocation,
-    GenerateFakeData
+    _generateFakeData,
   };
 });
