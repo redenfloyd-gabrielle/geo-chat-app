@@ -1,5 +1,5 @@
 import { createRouter, createWebHistory } from 'vue-router'
-import Chat from '../components/chat.vue'
+import Chat from '../components/Chat.vue'
 import Map from '../components/Map.vue'
 
 const router = createRouter({

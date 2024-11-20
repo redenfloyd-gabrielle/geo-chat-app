@@ -1,6 +1,7 @@
 import { defineStore } from "pinia";
 import { computed, ref, watch } from "vue";
-import { Message, User, Channel, LOGIN_STATUS } from "./types";
+import type { Message, User, Channel } from "./types";
+import { LOGIN_STATUS } from "./types";
 import { faker } from "@faker-js/faker";
 import { useSecureStore } from "./secure";
 import { useRouter } from "vue-router";

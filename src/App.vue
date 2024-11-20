@@ -5,7 +5,7 @@
 <script setup>
   import { useAppStore } from './stores/app';
   import { onMounted } from 'vue';
-  import { useWsStore } from './stores/ws.js'
+  import { useWsStore } from './stores/ws'
 
   const appStore = useAppStore()
   const wsStore = useWsStore()

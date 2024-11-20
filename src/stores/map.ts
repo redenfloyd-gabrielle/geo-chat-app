@@ -20,37 +20,40 @@ export const useMapStore = defineStore('mapStore', () => {
   const routingControl = ref();
   const router = useRouter()
 
-  const mapInstance = computed(() => (mapId?: string ) => {
-      map.value =  L.map(mapId).setView(thisCoordinates.value, 13);
-      
-      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '&copy; OpenStreetMap contributors',
-      }).addTo(map.value as L.Map);
+  const mapInstance = computed(() => (mapId?: string) => {
+    if (mapId) {
+      map.value = L.map(mapId).setView(thisCoordinates.value, 13);
+    }
 
-      const sendLocatonControl = L.Control.extend({
-        onAdd: function () {
-          const button = L.DomUtil.create('button', 'send-location-btn');
-          button.innerHTML = 'SEND LOCATION'; 
-          button.onclick = async() => {
-           isLoading.value = true
-          };
-          return button;
-        }
-      });
 
-      const goBackControl = L.Control.extend({
-        onAdd: function () {
-          const button = L.DomUtil.create('button', 'new-action-btn');
-          button.innerHTML = 'Go Back'; 
-          button.onclick = async() => {
-            router.push({ name: 'chat', params: { uuid: appStore.selectedChannel.uuid } })
-          };
-          return button;
-        }
-      });
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '&copy; OpenStreetMap contributors',
+    }).addTo(map.value as L.Map);
 
-      new sendLocatonControl({ position: 'topright' }).addTo(map.value as L.Map);
-      new goBackControl({ position: 'topright' }).addTo(map.value as L.Map);
+    const sendLocatonControl = L.Control.extend({
+      onAdd: function () {
+        const button = L.DomUtil.create('button', 'send-location-btn');
+        button.innerHTML = 'SEND LOCATION';
+        button.onclick = async () => {
+          isLoading.value = true
+        };
+        return button;
+      }
+    });
+
+    const goBackControl = L.Control.extend({
+      onAdd: function () {
+        const button = L.DomUtil.create('button', 'new-action-btn');
+        button.innerHTML = 'Go Back';
+        button.onclick = async () => {
+          router.push({ name: 'chat', params: { uuid: appStore.selectedChannel.uuid } })
+        };
+        return button;
+      }
+    });
+
+    new sendLocatonControl({ position: 'topright' }).addTo(map.value as L.Map);
+    new goBackControl({ position: 'topright' }).addTo(map.value as L.Map);
   });
 
   watch(() => thisCoordinates.value, (newValue, oldValue) => {
@@ -78,7 +81,7 @@ export const useMapStore = defineStore('mapStore', () => {
       routingControl.value = L.Routing.control({
         waypoints: coordinates.value.map(coord => L.latLng(coord[0], coord[1])),
         // routeWhileDragging: false,
-        createMarker: () => { return null; },
+        // createMarker: () => { return null; },
         fitSelectedRoutes: true,
         // showAlternatives: false,
         // altLineOptions: { // Styling for alternative routes
@@ -141,7 +144,7 @@ export const useMapStore = defineStore('mapStore', () => {
     }
   }
 
-  const getWeather = async (lat, long) => {
+  const getWeather = async (lat: number, long: number) => {
     const weatherAPI = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${long}&current_weather=true`;
     try {
       return await fetch(weatherAPI).then(async (response) => {
@@ -155,7 +158,7 @@ export const useMapStore = defineStore('mapStore', () => {
     }
   }
 
-  const getLocation = async (lat, long) => {
+  const getLocation = async (lat: number, long: number) => {
     const locationAPI = `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${long}&format=json`;
     try {
       return await fetch(locationAPI).then(async (response) => {
@@ -172,7 +175,7 @@ export const useMapStore = defineStore('mapStore', () => {
 
 
   const _generateFakeData = async (length: number) => {
-    
+
     coordinates.value.splice(0, length); //for faker only remove first 10 items
     for (let i = 0; i < length; i++) {
       //cebu city coordinates 
