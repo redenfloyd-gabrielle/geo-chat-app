@@ -22,7 +22,7 @@
 
             <div v-if="!isEditMode" class="form-group">
                 <label for="password">Confirm Password</label>
-                <input class="input-text-modal" id="password" type="password" v-model="user.password"
+                <input class="input-text-modal" id="confirmp-password" type="password" v-model="user.password"
                     placeholder="Enter password" required />
             </div>
 
@@ -41,11 +41,17 @@
 <script setup lang="ts">
     import { ref, defineProps, defineEmits, watch } from 'vue';
     import type { User } from '../../stores/types'; // Adjust path to your User interface
+    import { useRoute, useRouter } from 'vue-router';
+    import { useAppStore } from '../../stores/app';
 
     // Props to receive user data (optional for edit mode)
     const props = defineProps<{
         initialUser?: User;
     }>();
+
+    const router = useRouter()
+    const route = useRoute()
+    const appStore = useAppStore()
 
     // Emit events to notify parent component of actions
     const emit = defineEmits(['submit', 'cancel']);
@@ -75,12 +81,25 @@
 
     // Handle form submission
     const handleSubmit = () => {
-        emit('submit', { ...user.value }); // Send user data to parent component
+        if (route.fullPath.includes('registration')) {
+            appStore.addUser(user.value)
+        }
+        else {
+            // Update User
+            emit('submit', { ...user.value }); // Send user data to parent component
+        }
     };
 
     // Handle cancel action
     const cancel = () => {
-        emit('cancel');
+        if (route.fullPath.includes('registration')) {
+            router.push('/')
+        }
+        else {
+            //Close 
+            emit('cancel');
+
+        }
     };
 </script>
 

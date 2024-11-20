@@ -9,14 +9,17 @@
         <section class="channels">
             <div class="section-header">
                 <h2>Channels</h2>
-                <button @click="showAddChannelModal = true">+</button>
+                <button @click="editChannel">+</button>
             </div>
             <div class="ul-section">
                 <ul>
                     <li v-for="(channel, index) in appStore.channels" :key="index"
                         :class="{ active: channel.uuid === selectedChannel.uuid }"
-                        @click="appStore.selectChannel(channel)">
-                        {{ channel.name }}
+                        @click="appStore.setChannel(channel)">
+                        <div>
+                            {{ channel.name }}
+                        </div>
+                        <button class="edit-button" @click="editChannel(channel)">Edit</button>
                     </li>
                 </ul>
             </div>
@@ -26,21 +29,34 @@
         <section class="friends">
             <div class="section-header">
                 <h2>Friends</h2>
-                <button @click="showAddFriendModal = true">+</button>
+                <button @click="editFriend({} as User)">+</button>
             </div>
             <div class="ul-section">
                 <ul>
-                    <li v-for="(friend, index) in appStore.friends" :key="index" :class="{ active: false }"
-                        @click="appStore.selectFriend(friend)">
-                        {{ friend.fullname }}
+                    <li v-for="(friend, index) in appStore.friends" :key="index"
+                        :class="{ active: friend.uuid === appStore.selectedFriend.uuid }"
+                        @click="appStore.setFriend(friend)">
+                        <div>
+                            {{ friend.fullname }}
+                        </div>
+                        <button class="edit-button" @click="editFriend(friend)">Edit</button>
                     </li>
                 </ul>
             </div>
         </section>
+
+        <!-- Logout Section -->
+        <section class="logout-section">
+            <button class="btn btn-seconday" @click="appStore.logoutUser">Logout</button>
+            <button class="btn btn-primary" @click="appStore.logoutUser">User</button>
+        </section>
     </div>
-    <AddChannelModal :isOpen="showAddChannelModal" :friends="friends" @close="showAddChannelModal = false"
-        @add-channel="addChannel" />
-    <AddFriendModal :isOpen="showAddFriendModal" @close="showAddFriendModal = false" @friend-added="addFriend" />
+
+    <!-- Modals -->
+    <AddChannelModal :isOpen="showAddChannelModal" :initialChannel="appStore.thisChannel" :friends="friends"
+        @close="showAddChannelModal = false" @add-channel="addChannel" />
+    <AddFriendModal :isOpen="showAddFriendModal" :friend="appStore.thisFriend" @close="showAddFriendModal = false"
+        @friend-added="addFriend" />
 </template>
 
 <script setup lang="ts">
@@ -48,60 +64,60 @@
     import { useAppStore } from "../stores/app";
     import AddChannelModal from './modal/AddChannelModal.vue'; // Adjust path as needed
     import AddFriendModal from "./modal/AddFriendModal.vue";
+    import { Channel, Friend, User } from "../stores/types";
 
-    const appStore = useAppStore()
-    const showAddChannelModal = ref(false)
-    const showAddFriendModal = ref(false)
+    const appStore = useAppStore();
+    const showAddChannelModal = ref(false);
+    const showAddFriendModal = ref(false);
 
-    const friends = ref(appStore.friends)
+    const friends = ref(appStore.friends);
 
-    // Handle adding a new channel
     const addChannel = (channel: any) => {
-        console.log('New Channel:', channel);
-        appStore.addChannel(channel)
+        appStore.addChannel(channel);
     };
 
-    // Handle adding friend
     const addFriend = (email: string) => {
         console.log('Friend email:', email);
         // Call backend API to add friend or update friends list
     };
 
-    const selectedChannel = computed(() => {
-        return appStore.selectedChannel
-    })
+    const editChannel = (channel: any) => {
+        // Logic for editing a specific channel
+        console.log('Edit Channel:', channel);
+        appStore.setChannel(channel ?? {} as Channel)
+        showAddChannelModal.value = true
+    };
 
+    const editFriend = (friend: User) => {
+        // Logic for editing a specific friend
+        console.log('Edit Friend:', friend);
+        appStore.setFriend(friend)
+        showAddFriendModal.value = true
+    };
+
+    const selectedChannel = computed(() => appStore.selectedChannel);
 </script>
 
 <style scoped>
-
-    .channels {
-        flex: 1;
-        overflow: scroll;
-    }
-
-    .friends {
-        flex: 1;
-        overflow: scroll;
-    }
-
     .side-panel {
-        width: auto;
-        background-color: #f3f4f6;
-        padding: 0 1rem;
         display: flex;
         flex-direction: column;
-        gap: 1.5rem;
+        width: auto;
+        max-width: 350px;
+        background-color: #f3f4f6;
+        padding: 1rem;
         border-right: 1px solid #ddd;
+        gap: 1rem;
+        justify-content: space-between;
+        height: 100%;
     }
 
     .side-panel-header {
-        padding-top: 1rem;
+        text-align: center;
     }
 
     .side-panel-header h1 {
         font-size: 1.5rem;
-        margin: 0;
         color: #333;
     }
 
@@ -109,62 +125,76 @@
         display: flex;
         justify-content: space-between;
         align-items: center;
-        border-top: solid black;
-        padding-top: 1rem;
     }
 
     .section-header h2 {
-        margin: 0;
         font-size: 1.2rem;
+        color: #333;
     }
 
-    button {
-        background-color: #4caf50;
-        color: white;
+    .ul-section {
+        height: 45vh;
+        overflow-y: auto;
+    }
+
+    ul {
+        list-style-type: none;
+        padding: 0;
+    }
+
+    li {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 10px;
+        border-bottom: 1px solid #ddd;
+        cursor: pointer;
+        transition: background-color 0.3s ease;
+    }
+
+    li:hover {
+        background-color: #e0f3ff;
+    }
+
+    li.active {
+        background-color: #b3e0ff;
+    }
+
+    .edit-button {
+        background-color: #f3f4f6;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        padding: 2px 8px;
+        margin-left: 10px;
+        cursor: pointer;
+        font-size: 0.8rem;
+    }
+
+    .edit-button:hover {
+        background-color: #ddd;
+    }
+
+    .logout-section {
+        gap: 2rem;
+        margin-top: auto;
+        text-align: center;
+        margin-bottom: 2rem;
+        display: flex;
+        align-items: center;
+        justify-content: space-evenly;
+    }
+
+    .btn {
+        padding: 8px 12px;
+        /* background-color: #007bff; */
+        /* color: white; */
         border: none;
-        padding: 0.3rem 0.5rem;
         border-radius: 4px;
         cursor: pointer;
     }
 
-    button:hover {
-        background-color: #45a049;
-    }
-
-    ul {
-        list-style: none;
-        padding: 0;
-        margin: 0;
-    }
-
-    li {
-        color: black;
-        padding: 0.5rem;
-        border-bottom: 1px solid #ddd;
-        cursor: pointer;
-        /* Makes the list item feel clickable */
-        transition: background-color 0.3s ease;
-        /* Smooth transition */
-    }
-
-    /* Hover state with a light blue background */
-    li:hover {
-        background-color: #e0f3ff;
-        /* Light blue shade */
-    }
-
-    /* Active state with a deeper blue background */
-    li.active {
-        background-color: #b3e0ff;
-        /* Slightly darker blue shade */
-    }
-
-    h2 {
-        color: black;
-    }
-
-    .ul-section {
-        height: 100%;
-        overflow: auto;
+    .btn:hover {
+        background-color: #0056b3;
+        color: white;
     }
 </style>
