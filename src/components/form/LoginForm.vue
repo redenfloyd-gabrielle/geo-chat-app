@@ -1,23 +1,24 @@
 <template>
   <div class="login-form">
     <h2>Login</h2>
-    <form @submit.prevent="handleLogin">
-      <div class="form-group">
-        <label for="email">Username</label>
-        <input class="input-text-modal" id="username" v-model="username" placeholder="Enter your email" required />
-      </div>
+    <!-- <form> -->
+    <div class="form-group">
+      <label for="email">Username</label>
+      <input class="input-text-modal" id="username" v-model="username" placeholder="Enter your email" required />
+    </div>
 
-      <div class="form-group">
-        <label for="password">Password</label>
-        <input class="input-text-modal" id="password" type="password" v-model="password"
-          placeholder="Enter your password" required />
-      </div>
+    <div class="form-group">
+      <label for="password">Password</label>
+      <input class="input-text-modal" id="password" type="password" v-model="password" placeholder="Enter your password"
+        required />
+      {{ loginError }}
+    </div>
 
-      <div class="form-actions">
-        <button type="submit" class="btn btn-primary">Login</button>
-        <button type="button" class="btn btn-secondary" @click="goToSignup">Signup</button>
-      </div>
-    </form>
+    <div class="form-actions">
+      <button type="button" class="btn btn-primary" @click="handleLogin">Login</button>
+      <button type="button" class="btn btn-secondary" @click="goToSignup">Signup</button>
+    </div>
+    <!-- </form> -->
   </div>
 </template>
 
@@ -30,6 +31,7 @@
   // State for form inputs
   const username = ref('')
   const password = ref('')
+  const loginError = ref()
 
   // Access router instance to navigate between routes
   const router = useRouter()
@@ -37,11 +39,12 @@
 
   // Handle login logic
   const handleLogin = async () => {
+    loginError.value = 'clicked'
     if (username.value && password.value) {
       console.log('Logging in with:', { email: username.value, password: password.value })
 
       const respond = await sessionStore.loginUser(username.value, password.value)
-
+      loginError.value = respond
       if (respond == LOGIN_STATUS.SUCCESS) {
         console.log('@__ Login Success!!!')
       } else {
@@ -56,7 +59,7 @@
 
   // Navigate to the Signup page
   const goToSignup = () => {
-    router.push('/registration')
+    router.push('/register')
   }
 </script>
 
