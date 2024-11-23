@@ -1,224 +1,260 @@
 import { defineStore } from "pinia";
 import { computed, ref, watch } from "vue";
 import type { Message, User, Channel } from "./types";
-import { LOGIN_STATUS } from "./types";
+import { HTTP_RESPONSE_STATUS, LOGIN_STATUS } from "./types";
 import { faker } from "@faker-js/faker";
 import { useSecureStore } from "./secure";
 import { useRouter } from "vue-router";
+import type { AxiosInstance } from "axios";
+import axios from "axios";
+
+const apiURL = import.meta.env.VITE_API_URL
 
 export const useAppStore = defineStore('app', () => {
-    const user = ref({} as User)
-    const users = ref([] as User[])
-    const friends = ref([] as User[])
-    const selectedFriend = ref({} as User)
-    const thisFriend = ref({} as User)
+  const api = ref({} as AxiosInstance);
 
-    const channels = ref([] as Channel[])
-    const selectedChannel = ref({} as Channel)
-    const thisChannel = ref({} as Channel)
+  const user = ref({} as User)
+  const users = ref([] as User[])
+  const friends = ref([] as User[])
+  const selectedFriend = ref({} as User)
+  const thisFriend = ref({} as User)
 
-    const messages = ref([] as Message[]) // per channel
-    const selectedMessage = ref({} as Message)
-    const thisMessage = ref({} as Message)
+  const channels = ref([] as Channel[])
+  const selectedChannel = ref({} as Channel)
+  const thisChannel = ref({} as Channel)
 
-    const secureStore = useSecureStore()
-    const router = useRouter()
+  const messages = ref([] as Message[]) // per channel
+  const selectedMessage = ref({} as Message)
+  const thisMessage = ref({} as Message)
 
-    const secretString = '3a7eca62-bdc6-44f0-8f3e-abf909c44cf7' // this should be moved to .env
+  const secureStore = useSecureStore()
+  const router = useRouter()
 
-    const decryptMessages = ref([] as string[])
+  const secretString = '3a7eca62-bdc6-44f0-8f3e-abf909c44cf7' // this should be moved to .env
 
-    const isMapView = ref(false)
+  const decryptMessages = ref([] as string[])
 
-    // Computed Functions
+  const isMapView = ref(false)
 
-    const getUserFullname = computed(() => (uuid: string) => {
-        return friends.value.find(f => f.uuid === uuid)?.fullname
+  // Computed Functions
+
+  const getUserFullname = computed(() => (uuid: string) => {
+    return friends.value.find(f => f.uuid === uuid)?.fullname
+  })
+
+  const encryptMessage = async (message: string) => {
+    return await secureStore.encryptMessage(secretString, message)
+  }
+
+  const decryptMessage = async (message: string): Promise<string> => {
+    const _message = secureStore.decryptMessage(secretString, message)
+    return await _message
+  }
+
+  const selectedMessages = computed(() => {
+    return getMessagesByChannel(selectedChannel.value)
+  }) // Store chat messages
+
+  // Methods
+
+  const initializeApiInstance = () => {
+    api.value = axios.create({
+      baseURL: apiURL,
+      headers: {
+        'Content-Type': 'application/json',
+      }
     })
+  }
 
-    const encryptMessage = async (message: string) => {
-        return await secureStore.encryptMessage(secretString, message)
+  const handleApiRequest = async (request: Promise<any>): Promise<{ status: string; data: any | string } | { status: string; error: string }> => {
+    try {
+      const response = await request
+      const { status, message, data, error } = response.data
+
+      if (status === HTTP_RESPONSE_STATUS.SUCCESS) {
+        console.log(message || data)
+        return { status, data: message || data }
+      } else {
+        console.error(`ERROR::: ${error}`)
+        return { status, error }
+      }
+    } catch (error: any) {
+      console.error(`Request failed: ${error.message}`)
+      return { status: HTTP_RESPONSE_STATUS.FAIL, error: error.message }
+    }
+  }
+
+  const setRandomUser = () => {
+    user.value = friends.value[faker.number.int({ max: 9 })]
+  }
+
+  const setChannel = (payload?: Channel) => {
+    console.log('Select Channel : ', payload)
+    selectedChannel.value = payload ?? {} as Channel
+    thisChannel.value = { ...payload ?? {} as Channel }
+  }
+
+  const setFriend = (payload: User) => {
+    selectedFriend.value = payload
+    thisFriend.value = { ...payload }
+  }
+
+  const getMessagesByChannel = (payload: Channel) => {
+    return messages.value.filter(m => m.channel_uuid === payload.uuid)
+  }
+
+  const addChannel = (payload: Channel) => {
+    channels.value.push(payload)
+  }
+
+  const addUser = async (payload: User) => {
+    payload.password = await secureStore.hashPassword(payload.password)
+    users.value.push(payload)
+  }
+
+  // Login function: Verify email and password
+  const loginUser = async (email: string, password: string): Promise<LOGIN_STATUS> => {
+    const _user = users.value.find((user) => user.email === email);
+
+    if (!_user) {
+      console.error('User not found');
+      return LOGIN_STATUS.USER_NOT_FOUND;
     }
 
-    const decryptMessage = async (message: string): Promise<string> => {
-        const _message = secureStore.decryptMessage(secretString, message)
-        return await _message
+    const isPasswordValid = await secureStore.verifyPassword(password, _user.password);
+    if (isPasswordValid) {
+      console.log('Login successful:', _user);
+      user.value = _user
+      return LOGIN_STATUS.SUCCESS;
+    } else {
+      console.error('Invalid password');
+      return LOGIN_STATUS.INVALID_PASSWORD;
     }
+  };
 
-    const selectedMessages = computed(() => {
-        return getMessagesByChannel(selectedChannel.value)
-    }) // Store chat messages
+  const logoutUser = async () => {
+    user.value = {} as User
+    await router.push('/')
+    window.location.reload()
+  }
 
-    // Methods
+  const mapBtnClick = () => {
+    router.push({ name: 'map' })
+  }
 
-    const setRandomUser = () => {
-        user.value = friends.value[faker.number.int({ max: 9 })]
-    }
+  const messagesBtnClick = () => {
+    router.push({ name: 'chat' })
+  }
 
-    const setChannel = (payload?: Channel) => {
-        console.log('Select Channel : ', payload)
-        selectedChannel.value = payload ?? {} as Channel
-        thisChannel.value = { ...payload ?? {} as Channel }
-    }
-
-    const setFriend = (payload: User) => {
-        selectedFriend.value = payload
-        thisFriend.value = { ...payload }
-    }
-
-    const getMessagesByChannel = (payload: Channel) => {
-        return messages.value.filter(m => m.channel_uuid === payload.uuid)
-    }
-
-    const addChannel = (payload: Channel) => {
-        channels.value.push(payload)
-    }
-
-    const addUser = async (payload: User) => {
-        payload.password = await secureStore.hashPassword(payload.password)
-        users.value.push(payload)
-    }
-
-    // Login function: Verify email and password
-    const loginUser = async (email: string, password: string): Promise<LOGIN_STATUS> => {
-        const _user = users.value.find((user) => user.email === email);
-
-        if (!_user) {
-            console.error('User not found');
-            return LOGIN_STATUS.USER_NOT_FOUND;
-        }
-
-        const isPasswordValid = await secureStore.verifyPassword(password, _user.password);
-        if (isPasswordValid) {
-            console.log('Login successful:', _user);
-            user.value = _user
-            return LOGIN_STATUS.SUCCESS;
-        } else {
-            console.error('Invalid password');
-            return LOGIN_STATUS.INVALID_PASSWORD;
-        }
-    };
-
-    const logoutUser = async () => {
-        user.value = {} as User
-        await router.push('/')
-        window.location.reload()
-    }
-
-    const mapBtnClick = () => {
-        router.push({ name: 'map' })
-    }
-
-    const messagesBtnClick = () => {
-        router.push({ name: 'chat' })
-    }
-
-    // Watchers
-    // Scroll to the bottom whenever messages change
-    watch(selectedMessages, (value, _) => {
-        value.forEach(async (m, i) => {
-            const res = await decryptMessage(m.message)
-            decryptMessages.value[i] = res
-        })
-    });
-
-    watch(selectedChannel, (value, _) => {
-        if (value.uuid) {
-            router.push({ name: 'chat', params: { uuid: value.uuid } })
-        }
-        else {
-            router.push({ name: 'sidebar' })
-        }
+  // Watchers
+  // Scroll to the bottom whenever messages change
+  watch(selectedMessages, (value, _) => {
+    value.forEach(async (m, i) => {
+      const res = await decryptMessage(m.message)
+      decryptMessages.value[i] = res
     })
+  });
 
-    // Faker
-    const _generateFriends = async (n: number) => {
-        const firstUser = {
-            uuid: faker.string.uuid(),
-            fullname: 'user',
-            email: 'user@gmail.com',
-            password: await secureStore.hashPassword('user1'),
-            created_on: faker.number.int({ min: 99999 })
-        } as User
+  watch(selectedChannel, (value, _) => {
+    if (value.uuid) {
+      router.push({ name: 'chat', params: { uuid: value.uuid } })
+    }
+    else {
+      router.push({ name: 'sidebar' })
+    }
+  })
 
-        users.value.push(firstUser)
+  // Faker
+  const _generateFriends = async (n: number) => {
+    const firstUser = {
+      uuid: faker.string.uuid(),
+      fullname: 'user',
+      email: 'user@gmail.com',
+      password: await secureStore.hashPassword('user1'),
+      created_on: faker.number.int({ min: 99999 })
+    } as User
 
-        for (let index = 0; index < n; index++) {
-            const newFriend = {
-                uuid: faker.string.uuid(),
-                fullname: faker.person.fullName(),
-                email: faker.lorem.word() + "@gmail.com",
-                password: await secureStore.hashPassword(faker.helpers.arrayElement(['mark1', 'andrew1', 'potot1'])),
-                created_on: faker.number.int({ min: 99999 })
-            } as User
+    users.value.push(firstUser)
 
-            friends.value?.push(newFriend)
-            users.value.push(newFriend)
-        }
+    for (let index = 0; index < n; index++) {
+      const newFriend = {
+        uuid: faker.string.uuid(),
+        fullname: faker.person.fullName(),
+        email: faker.lorem.word() + "@gmail.com",
+        password: await secureStore.hashPassword(faker.helpers.arrayElement(['mark1', 'andrew1', 'potot1'])),
+        created_on: faker.number.int({ min: 99999 })
+      } as User
+
+      friends.value?.push(newFriend)
+      users.value.push(newFriend)
+    }
+  }
+
+  const _generateChannels = (n: number) => {
+    for (let index = 0; index < n; index++) {
+      const newChannel = {
+        uuid: faker.string.uuid(),
+        name: faker.vehicle.model(),
+        user_uuids: friends.value.map(friend => friend.uuid),
+        created_on: faker.number.int({ min: 99999 }),
+      } as unknown as Channel
+
+      channels.value?.push(newChannel)
+    }
+  }
+
+  const _generateMessage = async (n: number) => {
+    let _messages = [] as Message[]
+    for (let index = 0; index < n; index++) {
+      const newMessage = {
+        uuid: faker.string.uuid(),
+        channel_uuid: faker.helpers.arrayElement(channels.value).uuid,
+        user_uuid: faker.helpers.arrayElement(friends.value).uuid,
+        message: await secureStore.encryptMessage(secretString, faker.lorem.paragraphs(2)),
+        created_on: faker.number.int({ min: 99999 }),
+
+      } as Message
+
+      _messages.push(newMessage)
     }
 
-    const _generateChannels = (n: number) => {
-        for (let index = 0; index < n; index++) {
-            const newChannel = {
-                uuid: faker.string.uuid(),
-                name: faker.vehicle.model(),
-                user_uuids: friends.value.map(friend => friend.uuid),
-                created_on: faker.number.int({ min: 99999 }),
-            } as unknown as Channel
-
-            channels.value?.push(newChannel)
-        }
-    }
-
-    const _generateMessage = async (n: number) => {
-        let _messages = [] as Message[]
-        for (let index = 0; index < n; index++) {
-            const newMessage = {
-                uuid: faker.string.uuid(),
-                channel_uuid: faker.helpers.arrayElement(channels.value).uuid,
-                user_uuid: faker.helpers.arrayElement(friends.value).uuid,
-                message: await secureStore.encryptMessage(secretString, faker.lorem.paragraphs(2)),
-                created_on: faker.number.int({ min: 99999 }),
-
-            } as Message
-
-            _messages.push(newMessage)
-        }
-
-        messages.value.push(..._messages)
-    }
+    messages.value.push(..._messages)
+  }
 
 
-    return {
-        user,
-        friends,
-        channels,
-        selectedChannel,
-        thisChannel,
-        messages,
-        selectedMessage,
-        thisMessage,
-        getUserFullname,
-        selectedFriend,
-        decryptMessages,
-        isMapView,
-        selectedMessages,
-        users,
-        thisFriend,
-        encryptMessage,
-        decryptMessage,
-        setRandomUser,
-        getMessagesByChannel,
-        setChannel,
-        setFriend,
-        addChannel,
-        addUser,
-        loginUser,
-        logoutUser,
-        mapBtnClick,
-        messagesBtnClick,
-        _generateFriends,
-        _generateChannels,
-        _generateMessage,
-    }
+  return {
+    api,
+    user,
+    friends,
+    channels,
+    selectedChannel,
+    thisChannel,
+    messages,
+    selectedMessage,
+    thisMessage,
+    getUserFullname,
+    selectedFriend,
+    decryptMessages,
+    isMapView,
+    selectedMessages,
+    users,
+    thisFriend,
+    initializeApiInstance,
+    handleApiRequest,
+    encryptMessage,
+    decryptMessage,
+    setRandomUser,
+    getMessagesByChannel,
+    setChannel,
+    setFriend,
+    addChannel,
+    addUser,
+    loginUser,
+    logoutUser,
+    mapBtnClick,
+    messagesBtnClick,
+    _generateFriends,
+    _generateChannels,
+    _generateMessage,
+  }
 })

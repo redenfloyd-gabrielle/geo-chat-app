@@ -9,6 +9,11 @@ export enum LOGIN_STATUS {
   INVALID_PASSWORD = "Invalid password",
 }
 
+export enum HTTP_RESPONSE_STATUS {
+  SUCCESS = 'success',
+  FAIL = 'fail'
+}
+
 export interface User {
   uuid: string,
   fullname: string,

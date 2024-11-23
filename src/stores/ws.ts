@@ -2,7 +2,7 @@ import { defineStore } from "pinia";
 import { computed, ref, watch } from "vue";
 import { io, Socket } from "socket.io-client";
 
-const socket_url = 'http://localhost:3000' // will move to .env file
+const socketUrl = import.meta.env.VITE_WEBSOCKET_URL
 
 export const useWsStore = defineStore('ws', () => {
   const socket = ref<Socket | null>(null);
@@ -27,7 +27,7 @@ export const useWsStore = defineStore('ws', () => {
   }
 
   const connect = function () {
-    socket.value = io(socket_url);
+    socket.value = io(socketUrl);
     initializeSocketEvents()
   }
 
