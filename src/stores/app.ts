@@ -1,16 +1,21 @@
 import { defineStore } from "pinia";
 import { computed, ref, watch } from "vue";
-import type { Message, User, Channel } from "./types";
+import type { Message, User, Channel, Session } from "./types";
 import { HTTP_RESPONSE_STATUS, LOGIN_STATUS } from "./types";
 import { faker } from "@faker-js/faker";
 import { useSecureStore } from "./secure";
 import { useRouter } from "vue-router";
 import type { AxiosInstance } from "axios";
 import axios from "axios";
+import { useSeesionStore } from "./session";
+import { useUserStore } from "./user";
 
 const apiURL = import.meta.env.VITE_API_URL
 
 export const useAppStore = defineStore('app', () => {
+  const sessionStore = useSeesionStore()
+  const userStore = useUserStore()
+
   const api = ref({} as AxiosInstance);
 
   const user = ref({} as User)
@@ -59,7 +64,7 @@ export const useAppStore = defineStore('app', () => {
 
   const initializeApiInstance = () => {
     api.value = axios.create({
-      baseURL: apiURL,
+      baseURL: `${apiURL}`,
       headers: {
         'Content-Type': 'application/json',
       }
@@ -109,30 +114,57 @@ export const useAppStore = defineStore('app', () => {
 
   const addUser = async (payload: User) => {
     payload.password = await secureStore.hashPassword(payload.password)
-    users.value.push(payload)
+    const _user = await userStore.addUser(payload)
+
+    if (_user) {
+      users.value.push(_user)
+    }
+    else {
+      console.error('Add user failed')
+    }
   }
 
   // Login function: Verify email and password
-  const loginUser = async (email: string, password: string): Promise<LOGIN_STATUS> => {
-    const _user = users.value.find((user) => user.email === email);
+  const loginUser = async (username: string, password: string): Promise<LOGIN_STATUS> => {
+    // auth/loing (email, password)
+    const __user = await userStore.getUserByEmailPassword(username, password)
 
-    if (!_user) {
-      console.error('User not found');
-      return LOGIN_STATUS.USER_NOT_FOUND;
-    }
+    console.log('__user __user', __user)
 
-    const isPasswordValid = await secureStore.verifyPassword(password, _user.password);
-    if (isPasswordValid) {
-      console.log('Login successful:', _user);
-      user.value = _user
+    if (__user) {
+      console.log('Login successful:',);
+      user.value = __user
+      sessionStore.saveSession({ user: __user } as Session)
       return LOGIN_STATUS.SUCCESS;
-    } else {
+    }
+    else {
       console.error('Invalid password');
       return LOGIN_STATUS.INVALID_PASSWORD;
     }
+
+    // users.value = await userStore.getUsers() ?? [] as User[]
+
+    // const _user = users.value.find((user) => user.username === username);
+
+    // if (!_user) {
+    //   console.error('User not found');
+    //   return LOGIN_STATUS.USER_NOT_FOUND;
+    // }
+
+    // const isPasswordValid = await secureStore.verifyPassword(password, _user.password);
+    // if (isPasswordValid) {
+    //   console.log('Login successful:', _user);
+    //   user.value = _user
+    //   sessionStore.saveSession({ user: _user } as Session)
+    //   return LOGIN_STATUS.SUCCESS;
+    // } else {
+    //   console.error('Invalid password');
+    //   return LOGIN_STATUS.INVALID_PASSWORD;
+    // }
   };
 
   const logoutUser = async () => {
+    sessionStore.deleteSession()
     user.value = {} as User
     await router.push('/')
     window.location.reload()
@@ -144,6 +176,10 @@ export const useAppStore = defineStore('app', () => {
 
   const messagesBtnClick = () => {
     router.push({ name: 'chat' })
+  }
+
+  const getChannelByUser = (payload: User) => {
+
   }
 
   // Watchers

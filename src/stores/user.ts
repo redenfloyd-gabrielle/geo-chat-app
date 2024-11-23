@@ -96,6 +96,28 @@ export const useUserStore = defineStore('user', () => {
     }
   }
 
+  const getUserByEmailPassword = async (username: string, password: string): Promise<User | undefined> => {
+    if (!username || !password) {
+      console.error('@___ Missing username or password')
+      return undefined
+    }
+
+    try {
+      const response = await appStore.handleApiRequest(appStore.api.post(`auth/login`, { username, password }))
+
+      if ('error' in response) {
+        console.error(`@___ Error on retrieving user :: ${response.error}`)
+        return undefined
+      }
+
+      console.log(`@___ Retrieved user successfully ::`, response.data)
+      return response.data.user as User
+    } catch (error) {
+      console.error(`@___ Unexpected error on retrieving user :: ${error}`)
+      return undefined
+    }
+  }
+
   const addUser = async (payload: User): Promise<User | undefined> => {
     try {
       payload.password = await secureStore.hashPassword(payload.password)
@@ -192,6 +214,7 @@ export const useUserStore = defineStore('user', () => {
     addUser,
     updateUser,
     saveUser,
-    deleteUser
+    deleteUser,
+    getUserByEmailPassword
   }
 })
