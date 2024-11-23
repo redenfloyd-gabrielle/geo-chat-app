@@ -37,7 +37,7 @@ export const useChannelStore = defineStore('channel', () => {
   /* --------------------------------- METHODS ------------------------------ */
   const getChannels = async (): Promise<Channel[] | undefined> => {
     try {
-      const response = await appStore.handleApiRequest(appStore.api.get(`channels`))
+      const response = await appStore.handleApiRequest(appStore.api.get(`/channels`))
 
       if ('error' in response) {
         console.error(`@___ Error on retrieving channels :: ${response.error}`)
@@ -76,7 +76,7 @@ export const useChannelStore = defineStore('channel', () => {
     }
 
     try {
-      const response = await appStore.handleApiRequest(appStore.api.get(`channels/${uuid}`))
+      const response = await appStore.handleApiRequest(appStore.api.get(`/channels/${uuid}`))
 
       if ('error' in response) {
         console.error(`@___ Error on retrieving channel :: ${response.error}`)
@@ -93,7 +93,7 @@ export const useChannelStore = defineStore('channel', () => {
 
   const addChannel = async (payload: Channel): Promise<Channel | undefined> => {
     try {
-      const response = await appStore.handleApiRequest(appStore.api.post(`channels`, payload))
+      const response = await appStore.handleApiRequest(appStore.api.post(`/channels`, payload))
 
       if ('error' in response) {
         console.error(`@___ Error on adding channel :: ${response.error}`)
@@ -116,7 +116,7 @@ export const useChannelStore = defineStore('channel', () => {
     }
 
     try {
-      const response = await appStore.handleApiRequest(appStore.api.put(`channels/${_channel.uuid}`, payload))
+      const response = await appStore.handleApiRequest(appStore.api.put(`/channels/${_channel.uuid}`, payload))
       if ('error' in response) {
         console.error(`@___ Error on updating channel :: ${response.error}`)
         return undefined
@@ -142,7 +142,7 @@ export const useChannelStore = defineStore('channel', () => {
     }
 
     try {
-      const response = await appStore.handleApiRequest(appStore.api.delete(`channels/${payload.uuid}`))
+      const response = await appStore.handleApiRequest(appStore.api.delete(`/channels/${payload.uuid}`))
       if ('error' in response) {
         console.error(`@___ Error on deleting channel :: ${response.error}`)
         return undefined

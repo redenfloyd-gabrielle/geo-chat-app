@@ -37,7 +37,7 @@ export const useLocationStore = defineStore('location', () => {
   /* --------------------------------- METHODS ------------------------------ */
   const getLocations = async (): Promise<Location[] | undefined> => {
     try {
-      const response = await appStore.handleApiRequest(appStore.api.get(`locations`))
+      const response = await appStore.handleApiRequest(appStore.api.get(`/locations`))
 
       if ('error' in response) {
         console.error(`@___ Error on retrieving locations :: ${response.error}`)
@@ -76,7 +76,7 @@ export const useLocationStore = defineStore('location', () => {
     }
 
     try {
-      const response = await appStore.handleApiRequest(appStore.api.get(`locations/${uuid}`))
+      const response = await appStore.handleApiRequest(appStore.api.get(`/locations/${uuid}`))
 
       if ('error' in response) {
         console.error(`@___ Error on retrieving location :: ${response.error}`)
@@ -93,7 +93,7 @@ export const useLocationStore = defineStore('location', () => {
 
   const addLocation = async (payload: Location): Promise<Location | undefined> => {
     try {
-      const response = await appStore.handleApiRequest(appStore.api.post(`locations`, payload))
+      const response = await appStore.handleApiRequest(appStore.api.post(`/locations`, payload))
 
       if ('error' in response) {
         console.error(`@___ Error on adding location :: ${response.error}`)
@@ -116,7 +116,7 @@ export const useLocationStore = defineStore('location', () => {
     }
 
     try {
-      const response = await appStore.handleApiRequest(appStore.api.put(`locations/${_location.uuid}`, payload))
+      const response = await appStore.handleApiRequest(appStore.api.put(`/locations/${_location.uuid}`, payload))
       if ('error' in response) {
         console.error(`@___ Error on updating location :: ${response.error}`)
         return undefined
@@ -142,7 +142,7 @@ export const useLocationStore = defineStore('location', () => {
     }
 
     try {
-      const response = await appStore.handleApiRequest(appStore.api.delete(`locations/${payload.uuid}`))
+      const response = await appStore.handleApiRequest(appStore.api.delete(`/locations/${payload.uuid}`))
       if ('error' in response) {
         console.error(`@___ Error on deleting location :: ${response.error}`)
         return undefined

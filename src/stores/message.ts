@@ -37,7 +37,7 @@ export const useMessageStore = defineStore('message', () => {
   /* --------------------------------- METHODS ------------------------------ */
   const getMessages = async (): Promise<Message[] | undefined> => {
     try {
-      const response = await appStore.handleApiRequest(appStore.api.get(`messages`))
+      const response = await appStore.handleApiRequest(appStore.api.get(`/messages`))
 
       if ('error' in response) {
         console.error(`@___ Error on retrieving messages :: ${response.error}`)
@@ -76,7 +76,7 @@ export const useMessageStore = defineStore('message', () => {
     }
 
     try {
-      const response = await appStore.handleApiRequest(appStore.api.get(`messages/${uuid}`))
+      const response = await appStore.handleApiRequest(appStore.api.get(`/messages/${uuid}`))
 
       if ('error' in response) {
         console.error(`@___ Error on retrieving message :: ${response.error}`)
@@ -93,7 +93,7 @@ export const useMessageStore = defineStore('message', () => {
 
   const addMessage = async (payload: Message): Promise<Message | undefined> => {
     try {
-      const response = await appStore.handleApiRequest(appStore.api.post(`messages`, payload))
+      const response = await appStore.handleApiRequest(appStore.api.post(`/messages`, payload))
 
       if ('error' in response) {
         console.error(`@___ Error on adding message :: ${response.error}`)
@@ -116,7 +116,7 @@ export const useMessageStore = defineStore('message', () => {
     }
 
     try {
-      const response = await appStore.handleApiRequest(appStore.api.put(`messages/${_message.uuid}`, payload))
+      const response = await appStore.handleApiRequest(appStore.api.put(`/messages/${_message.uuid}`, payload))
       if ('error' in response) {
         console.error(`@___ Error on updating message :: ${response.error}`)
         return undefined
@@ -142,7 +142,7 @@ export const useMessageStore = defineStore('message', () => {
     }
 
     try {
-      const response = await appStore.handleApiRequest(appStore.api.delete(`messages/${payload.uuid}`))
+      const response = await appStore.handleApiRequest(appStore.api.delete(`/messages/${payload.uuid}`))
       if ('error' in response) {
         console.error(`@___ Error on deleting message :: ${response.error}`)
         return undefined
