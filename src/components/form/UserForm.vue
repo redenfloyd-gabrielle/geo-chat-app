@@ -45,15 +45,15 @@
 </template>
 
 <script setup lang="ts">
-  import { ref, defineEmits, watch, computed } from 'vue';
-  import type { User } from '../../stores/types'; // Adjust path to your User interface
-  import { useRoute, useRouter } from 'vue-router';
-  import { useAppStore } from '../../stores/app';
+  import { ref, defineEmits, watch, computed } from 'vue'
+  import type { User } from '../../stores/types' // Adjust path to your User interface
+  import { useRoute, useRouter } from 'vue-router'
+  import { useAppStore } from '../../stores/app'
 
   // Props to receive user data (optional for edit mode)
   const props = defineProps<{
-    initialUser?: User;
-  }>();
+    initialUser?: User
+  }>()
 
   const router = useRouter()
   const route = useRoute()
@@ -62,9 +62,9 @@
   const confirmPassword = ref('')
 
   // Emit events to notify parent component of actions
-  const emit = defineEmits(['submit', 'cancel']);
+  const emit = defineEmits(['submit', 'cancel'])
 
-  const isEditMode = ref(!!props.initialUser); // Determine if it's edit mode or registration
+  const isEditMode = ref(!!props.initialUser) // Determine if it's edit mode or registration
 
   // Initialize user state
   const user = ref<User>({
@@ -74,7 +74,7 @@
     email: props.initialUser?.email || '',
     password: '',
     created_on: props.initialUser?.created_on || Date.now(),
-  });
+  })
 
   const isPasswordMatched = computed(() => {
     return confirmPassword.value === user.value.password && user.value.password.length > 1
@@ -85,12 +85,12 @@
     () => props.initialUser,
     (newUser) => {
       if (newUser) {
-        user.value = { ...newUser, password: '' }; // Clear password field on edit
-        isEditMode.value = true;
+        user.value = { ...newUser, password: '' } // Clear password field on edit
+        isEditMode.value = true
       }
       console.log('initial User', props.initialUser)
     }
-  );
+  )
 
   // Handle form submission
   const handleSubmit = () => {
@@ -99,21 +99,21 @@
     }
     else {
       // Update User
-      emit('submit', { ...user.value }); // Send user data to parent component
+      emit('submit', { ...user.value }) // Send user data to parent component
     }
-  };
+  }
 
   // Handle cancel action
   const cancel = () => {
-    if (route.fullPath.includes('registration')) {
-      router.push('/')
+    if (route.fullPath.includes('register')) {
+      router.push('/login')
     }
     else {
       //Close 
-      emit('cancel');
+      emit('cancel')
 
     }
-  };
+  }
 </script>
 
 <style scoped>
