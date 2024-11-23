@@ -27,7 +27,7 @@
 </template>
 
 <script setup lang="ts">
-    import { ref, defineProps, defineEmits, watch, computed } from 'vue';
+    import { ref, defineEmits, watch, computed } from 'vue';
     import { type User } from '../../stores/types';
 
     // Props

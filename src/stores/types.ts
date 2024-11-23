@@ -53,3 +53,7 @@ export interface Friend {
   user2_uuid: string;  // UUID of the second user
   created_on: string;  // Timestamp when they became friends
 }
+
+export interface Session {
+  user: User
+}

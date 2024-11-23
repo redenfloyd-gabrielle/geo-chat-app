@@ -11,18 +11,18 @@
   const wsStore = useWsStore()
 
   onMounted(() => {
-    appStore._generateFriends(5)
+    // appStore._generateFriends(5)
 
-    wsStore.connect()
-    wsStore.joinChannel('test')
-    appStore._generateChannels(5)
-    appStore._generateMessage(20)
-    appStore.setRandomUser()
-    setTimeout(() => {
-      console.log('appStore.channels[0', appStore.channels[0])
-      const channel = appStore.channels[0]
-      appStore.setChannel(channel)
-    }, 500);
+    // wsStore.connect()
+    // wsStore.joinChannel('test')
+    // appStore._generateChannels(5)
+    // appStore._generateMessage(20)
+    // appStore.setRandomUser()
+    // setTimeout(() => {
+    //   console.log('appStore.channels[0', appStore.channels[0])
+    //   const channel = appStore.channels[0]
+    //   appStore.setChannel(channel)
+    // }, 500);
   })
 </script>
 

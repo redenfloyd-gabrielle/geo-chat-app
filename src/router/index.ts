@@ -11,7 +11,7 @@ const router = createRouter({
       component: () => import('../components/form/LoginForm.vue'), // LOGIN PAGE
     },
     {
-      path: '/:uuid',
+      path: '/:uuid', //login user UUID
       name: 'home',
       component: () => import('../components/view/MainView.vue'),
       props: true,

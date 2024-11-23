@@ -39,7 +39,7 @@
 </template>
 
 <script setup lang="ts">
-    import { ref, defineProps, defineEmits, watch } from 'vue';
+    import { ref, defineEmits, watch } from 'vue';
     import type { User } from '../../stores/types'; // Adjust path to your User interface
     import { useRoute, useRouter } from 'vue-router';
     import { useAppStore } from '../../stores/app';
