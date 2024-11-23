@@ -1,14 +1,14 @@
-import { defineStore } from "pinia";
-import { computed, ref, watch } from "vue";
-import type { Message, User, Channel, Session } from "./types";
-import { HTTP_RESPONSE_STATUS, LOGIN_STATUS } from "./types";
-import { faker } from "@faker-js/faker";
-import { useSecureStore } from "./secure";
-import { useRouter } from "vue-router";
-import type { AxiosInstance } from "axios";
-import axios from "axios";
-import { useSeesionStore } from "./session";
-import { useUserStore } from "./user";
+import { defineStore } from "pinia"
+import { computed, ref, watch } from "vue"
+import type { Message, User, Channel, Session } from "./types"
+import { HTTP_RESPONSE_STATUS, LOGIN_STATUS } from "./types"
+import { faker } from "@faker-js/faker"
+import { useSecureStore } from "./secure"
+import { useRouter } from "vue-router"
+import type { AxiosInstance } from "axios"
+import axios from "axios"
+import { useSeesionStore } from "./session"
+import { useUserStore } from "./user"
 
 const apiURL = import.meta.env.VITE_API_URL
 
@@ -16,7 +16,7 @@ export const useAppStore = defineStore('app', () => {
   const sessionStore = useSeesionStore()
   const userStore = useUserStore()
 
-  const api = ref({} as AxiosInstance);
+  const api = ref({} as AxiosInstance)
 
   const user = ref({} as User)
   const users = ref([] as User[])
@@ -71,21 +71,28 @@ export const useAppStore = defineStore('app', () => {
     })
   }
 
+  const addInstanceHeader = (key: string, value: string): void => {
+    api.value.defaults.headers[key] = value
+  }
+
   const handleApiRequest = async (request: Promise<any>): Promise<{ status: string; data: any | string } | { status: string; error: string }> => {
     try {
       const response = await request
       const { status, message, data, error } = response.data
 
       if (status === HTTP_RESPONSE_STATUS.SUCCESS) {
-        console.log(message || data)
-        return { status, data: message || data }
+        console.log(message, data) // Log both message and data
+        response.status = status
+        if (message) response.message = message
+        if (data) response.data = data
+        return response
       } else {
         console.error(`ERROR::: ${error}`)
         return { status, error }
       }
     } catch (error: any) {
-      console.error(`Request failed: ${error.message}`)
-      return { status: HTTP_RESPONSE_STATUS.FAIL, error: error.message }
+      console.error(`@___ Request failed axios :: `, error.response.data)
+      return error.response.data
     }
   }
 
@@ -124,52 +131,6 @@ export const useAppStore = defineStore('app', () => {
     }
   }
 
-  // Login function: Verify email and password
-  const loginUser = async (username: string, password: string): Promise<LOGIN_STATUS> => {
-    // auth/loing (email, password)
-    const __user = await userStore.getUserByEmailPassword(username, password)
-
-    console.log('__user __user', __user)
-
-    if (__user) {
-      console.log('Login successful:',);
-      user.value = __user
-      sessionStore.saveSession({ user: __user } as Session)
-      return LOGIN_STATUS.SUCCESS;
-    }
-    else {
-      console.error('Invalid password');
-      return LOGIN_STATUS.INVALID_PASSWORD;
-    }
-
-    // users.value = await userStore.getUsers() ?? [] as User[]
-
-    // const _user = users.value.find((user) => user.username === username);
-
-    // if (!_user) {
-    //   console.error('User not found');
-    //   return LOGIN_STATUS.USER_NOT_FOUND;
-    // }
-
-    // const isPasswordValid = await secureStore.verifyPassword(password, _user.password);
-    // if (isPasswordValid) {
-    //   console.log('Login successful:', _user);
-    //   user.value = _user
-    //   sessionStore.saveSession({ user: _user } as Session)
-    //   return LOGIN_STATUS.SUCCESS;
-    // } else {
-    //   console.error('Invalid password');
-    //   return LOGIN_STATUS.INVALID_PASSWORD;
-    // }
-  };
-
-  const logoutUser = async () => {
-    sessionStore.deleteSession()
-    user.value = {} as User
-    await router.push('/')
-    window.location.reload()
-  }
-
   const mapBtnClick = () => {
     router.push({ name: 'map' })
   }
@@ -189,7 +150,7 @@ export const useAppStore = defineStore('app', () => {
       const res = await decryptMessage(m.message)
       decryptMessages.value[i] = res
     })
-  });
+  })
 
   watch(selectedChannel, (value, _) => {
     if (value.uuid) {
@@ -276,6 +237,7 @@ export const useAppStore = defineStore('app', () => {
     users,
     thisFriend,
     initializeApiInstance,
+    addInstanceHeader,
     handleApiRequest,
     encryptMessage,
     decryptMessage,
@@ -285,8 +247,6 @@ export const useAppStore = defineStore('app', () => {
     setFriend,
     addChannel,
     addUser,
-    loginUser,
-    logoutUser,
     mapBtnClick,
     messagesBtnClick,
     _generateFriends,

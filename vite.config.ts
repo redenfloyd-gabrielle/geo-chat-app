@@ -13,10 +13,10 @@ export default defineConfig({
     // vueDevTools(),
     VitePWA({
       manifest: {
-        name: 'Your App Name',
-        short_name: 'App',
-        description: 'Your app description',
-        theme_color: '#ffffff',
+        name: 'Geo Chat',
+        short_name: 'Geo Chat',
+        description: 'Connect Everwhere!',
+        theme_color: '#5DB3FF',
         icons: [
           {
             src: 'icons/pwa-192x192.png',

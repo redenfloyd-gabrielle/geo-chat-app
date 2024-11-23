@@ -45,8 +45,8 @@
 
     <!-- Logout Section -->
     <section class="logout-section">
-      <button class="btn btn-seconday" @click="appStore.logoutUser">Logout</button>
-      <button class="btn btn-primary" @click="appStore.logoutUser">User</button>
+      <button class="btn btn-seconday" @click="sessionStore.logoutUser">Logout</button>
+      <button class="btn btn-primary" @click="sessionStore.logoutUser">User</button>
     </section>
   </div>
 
@@ -58,42 +58,44 @@
 </template>
 
 <script setup lang="ts">
-  import { computed, ref } from "vue";
-  import { useAppStore } from "../stores/app";
-  import AddChannelModal from './modal/AddChannelModal.vue'; // Adjust path as needed
-  import AddFriendModal from "./modal/AddFriendModal.vue";
-  import type { Channel, Friend, User } from "../stores/types";
+  import { computed, ref } from "vue"
+  import { useAppStore } from "../stores/app"
+  import AddChannelModal from './modal/AddChannelModal.vue' // Adjust path as needed
+  import AddFriendModal from "./modal/AddFriendModal.vue"
+  import type { Channel, Friend, User } from "../stores/types"
+  import { useSeesionStore } from "@/stores/session"
 
-  const appStore = useAppStore();
-  const showAddChannelModal = ref(false);
-  const showAddFriendModal = ref(false);
+  const appStore = useAppStore()
+  const sessionStore = useSeesionStore()
+  const showAddChannelModal = ref(false)
+  const showAddFriendModal = ref(false)
 
-  const friends = ref(appStore.friends);
+  const friends = ref(appStore.friends)
 
   const addChannel = (channel: any) => {
-    appStore.addChannel(channel);
-  };
+    appStore.addChannel(channel)
+  }
 
   const addFriend = (email: string) => {
-    console.log('Friend email:', email);
+    console.log('Friend email:', email)
     // Call backend API to add friend or update friends list
-  };
+  }
 
   const editChannel = (channel: any) => {
     // Logic for editing a specific channel
-    console.log('Edit Channel:', channel);
+    console.log('Edit Channel:', channel)
     appStore.setChannel(channel ?? {} as Channel)
     showAddChannelModal.value = true
-  };
+  }
 
   const editFriend = (friend: User) => {
     // Logic for editing a specific friend
-    console.log('Edit Friend:', friend);
+    console.log('Edit Friend:', friend)
     appStore.setFriend(friend)
     showAddFriendModal.value = true
-  };
+  }
 
-  const selectedChannel = computed(() => appStore.selectedChannel);
+  const selectedChannel = computed(() => appStore.selectedChannel)
 </script>
 
 <style scoped>

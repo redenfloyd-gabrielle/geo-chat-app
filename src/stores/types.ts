@@ -6,7 +6,7 @@ export enum CHANNEL_TYPE {
 export enum LOGIN_STATUS {
   SUCCESS = "Success",
   USER_NOT_FOUND = "User not found",
-  INVALID_PASSWORD = "Invalid password",
+  INVALID_PASSWORD = "Invalid user name or password",
 }
 
 export enum HTTP_RESPONSE_STATUS {
@@ -21,6 +21,13 @@ export interface User {
   email: string,
   password: string,
   created_on: number
+}
+export interface TokenResponse {
+  uuid: string,
+  username: string,
+  email: string,
+  iat: number,
+  exp: number
 }
 
 export interface Channel {
@@ -50,11 +57,12 @@ export interface Location {
 }
 
 export interface Friend {
-  user1_uuid: string;  // UUID of the first user
-  user2_uuid: string;  // UUID of the second user
-  created_on: string;  // Timestamp when they became friends
+  user1_uuid: string  // UUID of the first user
+  user2_uuid: string  // UUID of the second user
+  created_on: string  // Timestamp when they became friends
 }
 
 export interface Session {
-  user: User
+  user: User,
+  token: string
 }

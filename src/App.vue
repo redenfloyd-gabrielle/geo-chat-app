@@ -14,7 +14,7 @@
 
   onMounted(() => {
     appStore.initializeApiInstance()
-    sessionStore.getSession()
+    // sessionStore.getSession()
 
     // appStore._generateFriends(5)
 
