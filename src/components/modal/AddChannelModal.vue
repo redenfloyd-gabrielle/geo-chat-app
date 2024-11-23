@@ -75,7 +75,7 @@
         console.log('@_____ SHOW CHANNEL MODAL', props)
         if (value) {
             initialChannel.value = props.initialChannel ?? {} as Channel
-            channel.value = initialChannel.value.uuid   
+            channel.value = initialChannel.value.uuid
                 ? { ...initialChannel.value }
                 : {
                     uuid: '',

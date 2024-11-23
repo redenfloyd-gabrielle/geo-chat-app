@@ -20,6 +20,7 @@
     "bcrypt": "^5.1.1",
     "bcryptjs": "^2.4.3",
     "crypto-browserify": "^3.12.1",
+    "dayjs": "^1.11.13",
     "leaflet": "^1.9.4",
     "leaflet-routing-machine": "^3.2.12",
     "pinia": "^2.2.4",

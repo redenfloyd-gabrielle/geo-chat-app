@@ -20,7 +20,7 @@ export const useAppStore = defineStore('app', () => {
   const messageStore = useMessageStore()
   const channelStore = useChannelStore()
 
-  const api = ref({} as AxiosInstance);
+  const api = ref({} as AxiosInstance)
 
   const user = ref({} as User)
   const users = ref([] as User[])
@@ -72,21 +72,28 @@ export const useAppStore = defineStore('app', () => {
     })
   }
 
+  const addInstanceHeader = (key: string, value: string): void => {
+    api.value.defaults.headers[key] = value
+  }
+
   const handleApiRequest = async (request: Promise<any>): Promise<{ status: string; data: any | string } | { status: string; error: string }> => {
     try {
       const response = await request
       const { status, message, data, error } = response.data
 
       if (status === HTTP_RESPONSE_STATUS.SUCCESS) {
-        console.log(message || data)
-        return { status, data: message || data }
+        console.log(message, data) // Log both message and data
+        response.status = status
+        if (message) response.message = message
+        if (data) response.data = data
+        return response
       } else {
         console.error(`ERROR::: ${error}`)
         return { status, error }
       }
     } catch (error: any) {
-      console.error(`Request failed: ${error.message}`)
-      return { status: HTTP_RESPONSE_STATUS.FAIL, error: error.message }
+      console.error(`@___ Request failed axios :: `, error.response.data)
+      return error.response.data
     }
   }
 
@@ -213,7 +220,7 @@ export const useAppStore = defineStore('app', () => {
       const res = await decryptMessage(m.message)
       decryptMessages.value[i] = res
     })
-  });
+  })
 
   watch(selectedChannel, async (value, _) => {
     if (value.uuid) {
@@ -303,6 +310,7 @@ export const useAppStore = defineStore('app', () => {
     users,
     thisFriend,
     initializeApiInstance,
+    addInstanceHeader,
     handleApiRequest,
     encryptMessage,
     decryptMessage,
@@ -312,11 +320,10 @@ export const useAppStore = defineStore('app', () => {
     setFriend,
     addChannel,
     addUser,
-    loginUser,
-    logoutUser,
     mapBtnClick,
     messagesBtnClick,
     addMessage,
+    logoutUser,
     _generateFriends,
     _generateChannels,
     _generateMessage,
