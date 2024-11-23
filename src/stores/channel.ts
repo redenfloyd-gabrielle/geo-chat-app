@@ -37,7 +37,7 @@ export const useChannelStore = defineStore('channel', () => {
   /* --------------------------------- METHODS ------------------------------ */
   const getChannels = async (): Promise<Channel[] | undefined> => {
     try {
-      const response = await appStore.handleApiRequest(appStore.api.get(`/channels`))
+      const response = await appStore.handleApiRequest(appStore.api.get(`v1/channels`))
 
       if ('error' in response) {
         console.error(`@___ Error on retrieving channels :: ${response.error}`)
@@ -76,7 +76,7 @@ export const useChannelStore = defineStore('channel', () => {
     }
 
     try {
-      const response = await appStore.handleApiRequest(appStore.api.get(`/channels/${uuid}`))
+      const response = await appStore.handleApiRequest(appStore.api.get(`v1/channels/${uuid}`))
 
       if ('error' in response) {
         console.error(`@___ Error on retrieving channel :: ${response.error}`)
@@ -91,9 +91,31 @@ export const useChannelStore = defineStore('channel', () => {
     }
   }
 
+  const getChannelsByUser = async (user_uuid: string): Promise<Channel[] | undefined> => {
+    if (!user_uuid) {
+      console.error('@___ Missing uuid in payload')
+      return undefined
+    }
+
+    try {
+      const response = await appStore.handleApiRequest(appStore.api.get(`v1/channels/user_uuid/${user_uuid}`))
+
+      if ('error' in response) {
+        console.error(`@___ Error on retrieving channel :: ${response.error}`)
+        return undefined
+      }
+
+      console.log(`@___ Retrieved channel successfully ::`, response.data)
+      return response.data as Channel[]
+    } catch (error) {
+      console.error(`@___ Unexpected error on retrieving channel :: ${error}`)
+      return undefined
+    }
+  }
+
   const addChannel = async (payload: Channel): Promise<Channel | undefined> => {
     try {
-      const response = await appStore.handleApiRequest(appStore.api.post(`/channels`, payload))
+      const response = await appStore.handleApiRequest(appStore.api.post(`v1/channels`, payload))
 
       if ('error' in response) {
         console.error(`@___ Error on adding channel :: ${response.error}`)
@@ -116,7 +138,7 @@ export const useChannelStore = defineStore('channel', () => {
     }
 
     try {
-      const response = await appStore.handleApiRequest(appStore.api.put(`/channels/${_channel.uuid}`, payload))
+      const response = await appStore.handleApiRequest(appStore.api.put(`v1/channels/${_channel.uuid}`, payload))
       if ('error' in response) {
         console.error(`@___ Error on updating channel :: ${response.error}`)
         return undefined
@@ -142,7 +164,7 @@ export const useChannelStore = defineStore('channel', () => {
     }
 
     try {
-      const response = await appStore.handleApiRequest(appStore.api.delete(`/channels/${payload.uuid}`))
+      const response = await appStore.handleApiRequest(appStore.api.delete(`v1/channels/${payload.uuid}`))
       if ('error' in response) {
         console.error(`@___ Error on deleting channel :: ${response.error}`)
         return undefined
@@ -168,5 +190,6 @@ export const useChannelStore = defineStore('channel', () => {
     updateChannel,
     saveChannel,
     deleteChannel,
+    getChannelsByUser
   }
 })

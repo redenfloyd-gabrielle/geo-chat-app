@@ -39,6 +39,9 @@
 <script setup lang="ts">
     import { ref, computed, onMounted, watch } from 'vue';
     import { CHANNEL_TYPE, type User, type Channel } from '../../stores/types';
+    import { useSeesionStore } from '@/stores/session';
+
+    const sessionStore = useSeesionStore()
 
     // Props from parent
     const props = defineProps<{
@@ -72,7 +75,7 @@
         console.log('@_____ SHOW CHANNEL MODAL', props)
         if (value) {
             initialChannel.value = props.initialChannel ?? {} as Channel
-            channel.value = initialChannel.value
+            channel.value = initialChannel.value.uuid   
                 ? { ...initialChannel.value }
                 : {
                     uuid: '',
@@ -86,9 +89,15 @@
 
     // Handle form submission
     const handleSubmit = () => {
-        if (channel.value.user_uuids.length === 0) return;
+        const user = sessionStore.session?.user
+        if (user) {
+            if (!channel.value.user_uuids.includes(user?.uuid)) {
+                channel.value.user_uuids.push(user?.uuid);
+            }
+        }
+        if (!channel.value.user_uuids) return;
         channel.value.type =
-            channel.value.user_uuids.length === 1
+            channel.value.user_uuids?.length === 1
                 ? CHANNEL_TYPE.DIRECT_MESSAGE
                 : CHANNEL_TYPE.GROUP;
         emit('add-channel', { ...channel.value });

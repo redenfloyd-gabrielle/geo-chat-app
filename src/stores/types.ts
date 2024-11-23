@@ -34,7 +34,9 @@ export interface Channel {
 export interface Message {
   uuid: string,
   channel_uuid: string,
+  channel?: Channel,
   user_uuid: string,
+  user?: User,
   message: string,
   created_on: number
 }

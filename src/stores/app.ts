@@ -9,12 +9,16 @@ import type { AxiosInstance } from "axios";
 import axios from "axios";
 import { useSeesionStore } from "./session";
 import { useUserStore } from "./user";
+import { useMessageStore } from "./message";
+import { useChannelStore } from "./channel";
 
 const apiURL = import.meta.env.VITE_API_URL
 
 export const useAppStore = defineStore('app', () => {
   const sessionStore = useSeesionStore()
   const userStore = useUserStore()
+  const messageStore = useMessageStore()
+  const channelStore = useChannelStore()
 
   const api = ref({} as AxiosInstance);
 
@@ -29,6 +33,7 @@ export const useAppStore = defineStore('app', () => {
   const thisChannel = ref({} as Channel)
 
   const messages = ref([] as Message[]) // per channel
+  const selectedMessages = ref([] as Message[]) // per channel
   const selectedMessage = ref({} as Message)
   const thisMessage = ref({} as Message)
 
@@ -55,10 +60,6 @@ export const useAppStore = defineStore('app', () => {
     const _message = secureStore.decryptMessage(secretString, message)
     return await _message
   }
-
-  const selectedMessages = computed(() => {
-    return getMessagesByChannel(selectedChannel.value)
-  }) // Store chat messages
 
   // Methods
 
@@ -104,20 +105,46 @@ export const useAppStore = defineStore('app', () => {
     thisFriend.value = { ...payload }
   }
 
-  const getMessagesByChannel = (payload: Channel) => {
-    return messages.value.filter(m => m.channel_uuid === payload.uuid)
+  const getMessagesByChannel = async (payload: Channel) => {
+    return await messageStore.getMessageByChannel(payload.uuid)
   }
 
-  const addChannel = (payload: Channel) => {
-    channels.value.push(payload)
+  const addMessage = async (payload: Message) => {
+    const _message = await messageStore.addMessage(payload)
+    if (_message) {
+      selectedMessages.value.push(_message)
+    }
+  }
+
+  const addChannel = async (payload: Channel) => {
+    if (payload.uuid) {
+      const _channel = await channelStore.updateChannel(payload);
+      if (_channel) {
+        const index = channels.value.findIndex(channel => channel.uuid === payload.uuid);
+        if (index !== -1) {
+          channels.value[index] = _channel; // Update the existing channel in the array
+        } else {
+          channels.value.push(_channel); // Add the channel if it wasn't found
+        }
+      } else {
+        console.error('Update Channel failed');
+      }
+    } else {
+      const _channel = await channelStore.addChannel(payload);
+      if (_channel) {
+        channels.value.push(_channel); // Add a new channel
+      } else {
+        console.error('Add Channel failed');
+      }
+    }
   }
 
   const addUser = async (payload: User) => {
-    payload.password = await secureStore.hashPassword(payload.password)
+    // payload.password = await secureStore.hashPassword(payload.password)
     const _user = await userStore.addUser(payload)
 
     if (_user) {
-      users.value.push(_user)
+      router.push({ name: 'login' })
     }
     else {
       console.error('Add user failed')
@@ -127,7 +154,7 @@ export const useAppStore = defineStore('app', () => {
   // Login function: Verify email and password
   const loginUser = async (username: string, password: string): Promise<LOGIN_STATUS> => {
     // auth/loing (email, password)
-    const __user = await userStore.getUserByEmailPassword(username, password)
+    const __user = await userStore.loginUser(username, password)
 
     console.log('__user __user', __user)
 
@@ -178,9 +205,6 @@ export const useAppStore = defineStore('app', () => {
     router.push({ name: 'chat' })
   }
 
-  const getChannelByUser = (payload: User) => {
-
-  }
 
   // Watchers
   // Scroll to the bottom whenever messages change
@@ -191,8 +215,11 @@ export const useAppStore = defineStore('app', () => {
     })
   });
 
-  watch(selectedChannel, (value, _) => {
+  watch(selectedChannel, async (value, _) => {
     if (value.uuid) {
+      // Get Messages per channel; Already implemented "const selectedMessages = computed(() => {"
+      selectedMessages.value = await getMessagesByChannel(value) ?? [] as Message[]
+
       router.push({ name: 'chat', params: { uuid: value.uuid } })
     }
     else {
@@ -289,6 +316,7 @@ export const useAppStore = defineStore('app', () => {
     logoutUser,
     mapBtnClick,
     messagesBtnClick,
+    addMessage,
     _generateFriends,
     _generateChannels,
     _generateMessage,

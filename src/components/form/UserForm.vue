@@ -11,7 +11,7 @@
             <div class="form-group">
                 <label for="fullname">Username</label>
                 <input class="input-text-modal" id="fullname" type="text" v-model="user.username"
-                    placeholder="Enter full name" required />
+                    placeholder="Enter username" required />
             </div>
 
             <div class="form-group">
@@ -33,7 +33,7 @@
             </div>
 
             <div class="form-actions">
-                <button type="submit" class="btn btn-primary" :disabled="isPasswordMatched">
+                <button type="submit" class="btn btn-primary">
                     {{ isEditMode ? 'Update User' : 'Register User' }}
                 </button>
                 <button type="button" class="btn btn-secondary" @click="cancel">
@@ -49,6 +49,7 @@
     import type { User } from '../../stores/types'; // Adjust path to your User interface
     import { useRoute, useRouter } from 'vue-router';
     import { useAppStore } from '../../stores/app';
+    import { useUserStore } from '@/stores/user';
 
     // Props to receive user data (optional for edit mode)
     const props = defineProps<{
@@ -58,6 +59,7 @@
     const router = useRouter()
     const route = useRoute()
     const appStore = useAppStore()
+    const userStore = useUserStore()
 
     const confirmPassword = ref('')
 
@@ -95,7 +97,8 @@
     // Handle form submission
     const handleSubmit = () => {
         if (route.fullPath.includes('registration')) {
-            appStore.addUser(user.value)
+            // Register user
+            userStore.registerUser(user.value)
         }
         else {
             // Update User

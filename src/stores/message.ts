@@ -91,9 +91,33 @@ export const useMessageStore = defineStore('message', () => {
     }
   }
 
+  const getMessageByChannel = async (channel_uuid: string): Promise<Message[] | undefined> => {
+    if (!channel_uuid) {
+      console.error('@___ Missing uuid in payload')
+      return undefined
+    }
+
+    try {
+      const response = await appStore.handleApiRequest(appStore.api.get(`v1/messages/channel_uuid/${channel_uuid}`))
+
+      if ('error' in response) {
+        console.error(`@___ Error on retrieving message :: ${response.error}`)
+        return undefined
+      }
+
+      const messages = response.data.map((d: any) => d.message)
+
+      console.log(`@___ Retrieved message successfully ::`, response.data, messages)
+      return response.data as Message[]
+    } catch (error) {
+      console.error(`@___ Unexpected error on retrieving message :: ${error}`)
+      return undefined
+    }
+  }
+
   const addMessage = async (payload: Message): Promise<Message | undefined> => {
     try {
-      const response = await appStore.handleApiRequest(appStore.api.post(`/messages`, payload))
+      const response = await appStore.handleApiRequest(appStore.api.post(`v1/messages`, payload))
 
       if ('error' in response) {
         console.error(`@___ Error on adding message :: ${response.error}`)
@@ -168,5 +192,6 @@ export const useMessageStore = defineStore('message', () => {
     updateMessage,
     saveMessage,
     deleteMessage,
+    getMessageByChannel
   }
 })

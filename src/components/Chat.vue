@@ -12,10 +12,10 @@
 
     <div ref="messageContainer" class="message-list">
       <div v-for="(msg, index) in appStore.selectedMessages" :key="index" class="message"
-        :class="{ 'own-message': msg.user_uuid === appStore.user.uuid }">
-        <strong :class="{ 'own-message-name': msg.user_uuid === appStore.user.uuid }" class="message-name">
-          {{ appStore.getUserFullname(msg.user_uuid) }}</strong>
-        <span :class="{ 'own-message-content': msg.user_uuid === appStore.user.uuid }" class="message-content"
+        :class="{ 'own-message': msg.user?.uuid === appStore.user.uuid }">
+        <strong :class="{ 'own-message-name': msg.user?.uuid === appStore.user.uuid }" class="message-name">
+          {{ appStore.getUserFullname(msg.user?.uuid ?? '') }}</strong>
+        <span :class="{ 'own-message-content': msg.user?.uuid === appStore.user.uuid }" class="message-content"
           v-html="appStore.decryptMessages[index]">
         </span>
       </div>
@@ -113,7 +113,9 @@
           channel_uuid: appStore.selectedChannel.uuid,
           message: await appStore.encryptMessage(content)
         } as Message
-        appStore.messages.push(newMessage);
+
+        await appStore.addMessage(newMessage)
+
         editor.value.commands.clearContent();
       }
     }

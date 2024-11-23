@@ -81,7 +81,7 @@ export const useUserStore = defineStore('user', () => {
     }
 
     try {
-      const response = await appStore.handleApiRequest(appStore.api.get(`/users/${uuid}`))
+      const response = await appStore.handleApiRequest(appStore.api.get(`v1/users/${uuid}`))
 
       if ('error' in response) {
         console.error(`@___ Error on retrieving user :: ${response.error}`)
@@ -96,7 +96,7 @@ export const useUserStore = defineStore('user', () => {
     }
   }
 
-  const getUserByEmailPassword = async (username: string, password: string): Promise<User | undefined> => {
+  const loginUser = async (username: string, password: string): Promise<User | undefined> => {
     if (!username || !password) {
       console.error('@___ Missing username or password')
       return undefined
@@ -122,6 +122,24 @@ export const useUserStore = defineStore('user', () => {
     try {
       payload.password = await secureStore.hashPassword(payload.password)
       const response = await appStore.handleApiRequest(appStore.api.post(`/users`, payload))
+
+      if ('error' in response) {
+        console.error(`@___ Error on adding user :: ${response.error}`)
+        return undefined
+      }
+
+      console.log(`@___ Added user successfully ::`, response.data)
+      return response.data as User
+    } catch (error) {
+      console.error(`@___ Unexpected error on adding user :: ${error}`)
+      return undefined
+    }
+  }
+
+  const registerUser = async (payload: User): Promise<User | undefined> => {
+    try {
+      payload.password = await secureStore.hashPassword(payload.password)
+      const response = await appStore.handleApiRequest(appStore.api.post(`auth/register`, payload))
 
       if ('error' in response) {
         console.error(`@___ Error on adding user :: ${response.error}`)
@@ -215,6 +233,7 @@ export const useUserStore = defineStore('user', () => {
     updateUser,
     saveUser,
     deleteUser,
-    getUserByEmailPassword
+    loginUser,
+    registerUser
   }
 })
