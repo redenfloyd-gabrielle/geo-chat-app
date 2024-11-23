@@ -6,11 +6,16 @@
   import { useAppStore } from './stores/app';
   import { onMounted } from 'vue';
   import { useWsStore } from './stores/ws'
+  import { useSeesionStore } from './stores/session';
 
   const appStore = useAppStore()
   const wsStore = useWsStore()
+  const sessionStore = useSeesionStore()
 
   onMounted(() => {
+    appStore.initializeApiInstance()
+    sessionStore.getSession()
+
     // appStore._generateFriends(5)
 
     // wsStore.connect()

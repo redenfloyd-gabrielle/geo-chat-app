@@ -17,6 +17,7 @@ export enum HTTP_RESPONSE_STATUS {
 export interface User {
   uuid: string,
   fullname: string,
+  username: string,
   email: string,
   password: string,
   created_on: number

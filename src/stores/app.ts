@@ -64,7 +64,7 @@ export const useAppStore = defineStore('app', () => {
 
   const initializeApiInstance = () => {
     api.value = axios.create({
-      baseURL: apiURL,
+      baseURL: `${apiURL}`,
       headers: {
         'Content-Type': 'application/json',
       }
@@ -125,26 +125,42 @@ export const useAppStore = defineStore('app', () => {
   }
 
   // Login function: Verify email and password
-  const loginUser = async (email: string, password: string): Promise<LOGIN_STATUS> => {
-    users.value = await userStore.getUsers() ?? [] as User[]
+  const loginUser = async (username: string, password: string): Promise<LOGIN_STATUS> => {
+    // auth/loing (email, password)
+    const __user = await userStore.getUserByEmailPassword(username, password)
 
-    const _user = users.value.find((user) => user.email === email);
+    console.log('__user __user', __user)
 
-    if (!_user) {
-      console.error('User not found');
-      return LOGIN_STATUS.USER_NOT_FOUND;
-    }
-
-    const isPasswordValid = await secureStore.verifyPassword(password, _user.password);
-    if (isPasswordValid) {
-      console.log('Login successful:', _user);
-      user.value = _user
-      sessionStore.saveSession({ user: _user } as Session)
+    if (__user) {
+      console.log('Login successful:',);
+      user.value = __user
+      sessionStore.saveSession({ user: __user } as Session)
       return LOGIN_STATUS.SUCCESS;
-    } else {
+    }
+    else {
       console.error('Invalid password');
       return LOGIN_STATUS.INVALID_PASSWORD;
     }
+
+    // users.value = await userStore.getUsers() ?? [] as User[]
+
+    // const _user = users.value.find((user) => user.username === username);
+
+    // if (!_user) {
+    //   console.error('User not found');
+    //   return LOGIN_STATUS.USER_NOT_FOUND;
+    // }
+
+    // const isPasswordValid = await secureStore.verifyPassword(password, _user.password);
+    // if (isPasswordValid) {
+    //   console.log('Login successful:', _user);
+    //   user.value = _user
+    //   sessionStore.saveSession({ user: _user } as Session)
+    //   return LOGIN_STATUS.SUCCESS;
+    // } else {
+    //   console.error('Invalid password');
+    //   return LOGIN_STATUS.INVALID_PASSWORD;
+    // }
   };
 
   const logoutUser = async () => {
@@ -163,7 +179,7 @@ export const useAppStore = defineStore('app', () => {
   }
 
   const getChannelByUser = (payload: User) => {
-    
+
   }
 
   // Watchers
