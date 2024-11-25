@@ -42,7 +42,7 @@ export const useUserStore = defineStore('user', () => {
   /* --------------------------------- METHODS ------------------------------ */
   const getUsers = async (): Promise<User[] | undefined> => {
     try {
-      const response = await appStore.handleApiRequest(appStore.api.get(`/users`))
+      const response = await appStore.handleApiRequest(appStore.api.get(`v1/users`))
 
       if ('error' in response) {
         console.error(`@___ Error on retrieving user :: ${response.error}`)
@@ -121,7 +121,7 @@ export const useUserStore = defineStore('user', () => {
   const addUser = async (payload: User): Promise<User | undefined> => {
     try {
       payload.password = await secureStore.hashPassword(payload.password)
-      const response = await appStore.handleApiRequest(appStore.api.post(`/users`, payload))
+      const response = await appStore.handleApiRequest(appStore.api.post(`v1/users`, payload))
 
       if ('error' in response) {
         console.error(`@___ Error on adding user :: ${response.error}`)
@@ -166,7 +166,7 @@ export const useUserStore = defineStore('user', () => {
         payload.password = await secureStore.hashPassword(payload.password)
       }
 
-      const response = await appStore.handleApiRequest(appStore.api.put(`/users/${_user.uuid}`, payload))
+      const response = await appStore.handleApiRequest(appStore.api.put(`v1/users/${_user.uuid}`, payload))
       if ('error' in response) {
         console.error(`@___ Error on updating user :: ${response.error}`)
         return undefined
@@ -192,7 +192,7 @@ export const useUserStore = defineStore('user', () => {
     }
 
     try {
-      const response = await appStore.handleApiRequest(appStore.api.delete(`/users/${payload.uuid}`))
+      const response = await appStore.handleApiRequest(appStore.api.delete(`v1/users/${payload.uuid}`))
       if ('error' in response) {
         console.error(`@___ Error on deleting user :: ${response.error}`)
         return undefined
