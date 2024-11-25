@@ -1,20 +1,13 @@
 <template>
     <div class="modal-backdrop" v-if="isOpen">
         <div class="modal">
-            <h2>Add New Channel</h2>
+            <h2>{{ isEditMode ? "Edit Channel" : "Add New Channel" }}</h2>
             <form @submit.prevent="handleSubmit">
                 <div class="form-group">
                     <label for="name">Channel Name</label>
-                    <input class="input-text-modal" v-model="channel.name" id="name" type="text" required />
+                    <input class="input-text-modal" v-model="channel.name" id="name" type="text"
+                        placeholder="Enter channel name" required />
                 </div>
-
-                <!-- <div class="form-group">
-                    <label for="type">Channel Type</label>
-                    <select v-model="channel.type" id="type" required>
-                        <option value="public">Public</option>
-                        <option value="private">Private</option>
-                    </select>
-                </div> -->
 
                 <div class="form-group">
                     <label>Select Users</label>
@@ -28,8 +21,15 @@
                 </div>
 
                 <div class="form-actions">
-                    <button type="submit" class="btn btn-primary">Add Channel</button>
-                    <button type="button" class="btn btn-secondary" @click="closeModal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">
+                        {{ isEditMode ? "Save Changes" : "Add Channel" }}
+                    </button>
+                    <button type="button" class="btn btn-secondary" @click="closeModal">
+                        Cancel
+                    </button>
+                    <button v-if="isEditMode" type="button" class="btn btn-danger" @click="handleDelete">
+                        Delete Channel
+                    </button>
                 </div>
             </form>
         </div>
@@ -37,38 +37,82 @@
 </template>
 
 <script setup lang="ts">
-    import { ref } from 'vue';
-    //   import { v4 as uuidv4 } from 'uuid';
-    import { CHANNEL_TYPE, User, type Channel } from '../../stores/types'; // Adjust as needed
+    import { ref, computed, onMounted, watch } from 'vue';
+    import { CHANNEL_TYPE, type User, type Channel } from '../../stores/types';
+    import { useSeesionStore } from '@/stores/session';
+
+    const sessionStore = useSeesionStore()
 
     // Props from parent
     const props = defineProps<{
         isOpen: boolean;
         friends: User[];
+        initialChannel: Channel | null;
     }>();
 
     // Emit events to parent
-    const emit = defineEmits(['close', 'add-channel']);
+    const emit = defineEmits(['close', 'add-channel', 'delete-channel']);
 
-    // State for new channel
-    const channel = ref<Channel>({
-        uuid: '',
-        name: '',
-        user_uuids: [],
-        type: CHANNEL_TYPE.GROUP,
-        created_on: new Date().toISOString(),
-    });
+    const initialChannel = ref({} as Channel)
+
+    // Check if editing mode or creating a new channel
+    const isEditMode = computed(() => !!initialChannel.value.uuid);
+
+    // Initialize channel state based on whether it's a new or existing channel
+    const channel = ref<Channel>(
+        initialChannel.value
+            ? { ...initialChannel.value }
+            : {
+                uuid: '',
+                name: '',
+                user_uuids: [],
+                type: CHANNEL_TYPE.GROUP,
+                created_on: new Date().toISOString(),
+            }
+    );
+
+    watch(() => props.isOpen, (value, _) => {
+        console.log('@_____ SHOW CHANNEL MODAL', props)
+        if (value) {
+            initialChannel.value = props.initialChannel ?? {} as Channel
+            channel.value = initialChannel.value.uuid
+                ? { ...initialChannel.value }
+                : {
+                    uuid: '',
+                    name: '',
+                    user_uuids: [],
+                    type: CHANNEL_TYPE.GROUP,
+                    created_on: new Date().toISOString(),
+                }
+        }
+    })
 
     // Handle form submission
     const handleSubmit = () => {
-        if (channel.value.user_uuids.length === 0) return
-        // channel.value.uuid = uuidv4(); // Generate unique UUID
-        channel.value.type = channel.value.user_uuids.length === 1 ? CHANNEL_TYPE.DIRECT_MESSAGE : CHANNEL_TYPE.GROUP
-        emit('add-channel', { ...channel.value }); // Emit new channel data
+        const user = sessionStore.session?.user
+        if (user) {
+            if (!channel.value.user_uuids.includes(user?.uuid)) {
+                channel.value.user_uuids.push(user?.uuid);
+            }
+        }
+        if (!channel.value.user_uuids) return;
+        channel.value.type =
+            channel.value.user_uuids?.length === 1
+                ? CHANNEL_TYPE.DIRECT_MESSAGE
+                : CHANNEL_TYPE.GROUP;
+        emit('add-channel', { ...channel.value });
         closeModal();
     };
 
-    // Close the modal
+    // Handle deleting channel
+    const handleDelete = () => {
+        if (confirm('Are you sure you want to delete this channel?')) {
+            emit('delete-channel', channel.value.uuid);
+            closeModal();
+        }
+    };
+
+    // Close modal
     const closeModal = () => {
         emit('close');
     };
@@ -98,20 +142,29 @@
     }
 
     .form-group {
-        margin-bottom: 1rem;
+        margin-bottom: 1.5rem;
     }
 
     .form-group label {
-        display: block;
+        font-weight: bold;
         margin-bottom: 0.5rem;
+        display: block;
+    }
+
+    .input-text-modal {
+        width: 100%;
+        padding: 0.5rem;
+        font-size: 1rem;
+        border-radius: 4px;
+        border: 1px solid #ddd;
     }
 
     .checkbox-group {
         display: flex;
         flex-wrap: wrap;
         gap: 0.5rem;
-        height: 30vh;
-        overflow: auto;
+        height: 150px;
+        overflow-y: auto;
     }
 
     .checkbox-item {
@@ -126,5 +179,30 @@
     .form-actions {
         display: flex;
         justify-content: space-between;
+        gap: 1rem;
+        margin-top: 1.5rem;
+    }
+
+    .btn {
+        padding: 0.5rem 1rem;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 1rem;
+    }
+
+    .btn-primary {
+        background-color: #007bff;
+        color: white;
+    }
+
+    .btn-secondary {
+        background-color: #6c757d;
+        color: white;
+    }
+
+    .btn-danger {
+        background-color: #dc3545;
+        color: white;
     }
 </style>

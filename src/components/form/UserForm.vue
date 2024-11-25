@@ -9,6 +9,12 @@
             </div>
 
             <div class="form-group">
+                <label for="fullname">Username</label>
+                <input class="input-text-modal" id="fullname" type="text" v-model="user.username"
+                    placeholder="Enter username" required />
+            </div>
+
+            <div class="form-group">
                 <label for="email">Email</label>
                 <input class="input-text-modal" id="email" type="email" v-model="user.email" placeholder="Enter email"
                     required />
@@ -22,7 +28,7 @@
 
             <div v-if="!isEditMode" class="form-group">
                 <label for="password">Confirm Password</label>
-                <input class="input-text-modal" id="password" type="password" v-model="user.password"
+                <input class="input-text-modal" id="confirmp-password" type="password" v-model="confirmPassword"
                     placeholder="Enter password" required />
             </div>
 
@@ -39,49 +45,78 @@
 </template>
 
 <script setup lang="ts">
-    import { ref, defineProps, defineEmits, watch } from 'vue';
-    import type { User } from '../../stores/types'; // Adjust path to your User interface
+    import { ref, defineEmits, watch, computed } from 'vue'
+    import type { User } from '../../stores/types' // Adjust path to your User interface
+    import { useRoute, useRouter } from 'vue-router'
+    import { useAppStore } from '../../stores/app'
+    import { useUserStore } from '@/stores/user'
 
     // Props to receive user data (optional for edit mode)
     const props = defineProps<{
-        initialUser?: User;
-    }>();
+        initialUser?: User
+    }>()
+
+    const router = useRouter()
+    const route = useRoute()
+    const appStore = useAppStore()
+    const userStore = useUserStore()
+
+    const confirmPassword = ref('')
 
     // Emit events to notify parent component of actions
-    const emit = defineEmits(['submit', 'cancel']);
+    const emit = defineEmits(['submit', 'cancel'])
 
-    const isEditMode = ref(!!props.initialUser); // Determine if it's edit mode or registration
+    const isEditMode = ref(!!props.initialUser) // Determine if it's edit mode or registration
 
     // Initialize user state
     const user = ref<User>({
         uuid: props.initialUser?.uuid || '',
         fullname: props.initialUser?.fullname || '',
+        username: props.initialUser?.username || '',
         email: props.initialUser?.email || '',
         password: '',
         created_on: props.initialUser?.created_on || Date.now(),
-    });
+    })
+
+    const isPasswordMatched = computed(() => {
+        return confirmPassword.value === user.value.password && user.value.password.length > 1
+    })
 
     // Watch for changes in the props.initialUser prop to update the form (for editing)
     watch(
         () => props.initialUser,
         (newUser) => {
             if (newUser) {
-                user.value = { ...newUser, password: '' }; // Clear password field on edit
-                isEditMode.value = true;
+                user.value = { ...newUser, password: '' } // Clear password field on edit
+                isEditMode.value = true
             }
             console.log('initial User', props.initialUser)
         }
-    );
+    )
 
     // Handle form submission
     const handleSubmit = () => {
-        emit('submit', { ...user.value }); // Send user data to parent component
-    };
+        if (route.fullPath.includes('registration')) {
+            // Register user
+            userStore.registerUser(user.value)
+        }
+        else {
+            // Update User
+            emit('submit', { ...user.value }) // Send user data to parent component
+        }
+    }
 
     // Handle cancel action
     const cancel = () => {
-        emit('cancel');
-    };
+        if (route.fullPath.includes('registration')) {
+            router.push('/')
+        }
+        else {
+            //Close 
+            emit('cancel')
+
+        }
+    }
 </script>
 
 <style scoped>

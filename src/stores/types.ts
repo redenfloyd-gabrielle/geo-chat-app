@@ -3,12 +3,31 @@ export enum CHANNEL_TYPE {
   DIRECT_MESSAGE = "Direct Message",
 }
 
+export enum LOGIN_STATUS {
+  SUCCESS = "Success",
+  USER_NOT_FOUND = "User not found",
+  INVALID_PASSWORD = "Invalid user name or password",
+}
+
+export enum HTTP_RESPONSE_STATUS {
+  SUCCESS = 'success',
+  FAIL = 'fail'
+}
+
 export interface User {
   uuid: string,
   fullname: string,
+  username: string,
   email: string,
   password: string,
   created_on: number
+}
+export interface TokenResponse {
+  uuid: string,
+  username: string,
+  email: string,
+  iat: number,
+  exp: number
 }
 
 export interface Channel {
@@ -22,23 +41,36 @@ export interface Channel {
 export interface Message {
   uuid: string,
   channel_uuid: string,
+  channel?: Channel,
   user_uuid: string,
+  user?: User,
   message: string,
   created_on: number
 }
 
 export interface Location {
-  uuid: string,
+  uuid?: string,
   channel_uuid: string,
   user_uuid: string,
-  lattitude: string,
-  longitude: string,
+  latitude: number,
+  longitude: number,
   weather?: string
-  modified_on: number
+  modified_on?: number
 }
 
 export interface Friend {
-  user1_uuid: string;  // UUID of the first user
-  user2_uuid: string;  // UUID of the second user
-  created_on: string;  // Timestamp when they became friends
+  user1_uuid: string  // UUID of the first user
+  user2_uuid: string  // UUID of the second user
+  created_on: string  // Timestamp when they became friends
+}
+
+export interface Session {
+  user: User,
+  token: string
+}
+
+export interface Coordinates {
+  user_uuid?: string,
+  latitude: number,
+  longitude: number
 }
