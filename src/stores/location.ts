@@ -1,17 +1,19 @@
 /* ------------------------------- VUE IMPORTS ----------------------------- */
 import { defineStore } from "pinia"
-import { ref } from "vue"
+import { ref, watch } from "vue"
 /* ----------------------------- END VUE IMPORTS --------------------------- */
 
 /* ----------------------------- STORE IMPORTS ----------------------------- */
 import { useAppStore } from "./app"
+import { useMapStore } from "./map"
 /* -------------------------- END STORE IMPORTS ---------------------------- */
 
 /* --------------------------- PACKAGE IMPORTS ----------------------------- */
 /* ------------------------- END PACKAGE IMPORTS --------------------------- */
 
 /* ---------------------------- OTHER IMPORTS ------------------------------ */
-import { HTTP_RESPONSE_STATUS, type Location } from "./types"
+import { HTTP_RESPONSE_STATUS, type Coordinates, type Location } from "./types"
+import { map } from "leaflet"
 /* -------------------------- END OTHER IMPORTS ---------------------------- */
 
 
@@ -20,6 +22,8 @@ import { HTTP_RESPONSE_STATUS, type Location } from "./types"
 export const useLocationStore = defineStore('location', () => {
   /* --------------------------------- STORES ------------------------------- */
   const appStore = useAppStore()
+  const mapStore = useMapStore()
+
   /* ------------------------------ END STORES ------------------------------ */
 
   /* --------------------------------- STATES ------------------------------- */
@@ -35,6 +39,13 @@ export const useLocationStore = defineStore('location', () => {
   /* ------------------------------ END WATCHERS ---------------------------- */
 
   /* --------------------------------- METHODS ------------------------------ */
+
+  watch(locations, (location) =>{
+    if(location){
+      mapStore.setCoordinates(location as Coordinates[])
+    }
+  })
+
   const getLocations = async (): Promise<Location[] | undefined> => {
     try {
       const response = await appStore.handleApiRequest(appStore.api.get(`/locations`))
@@ -46,6 +57,26 @@ export const useLocationStore = defineStore('location', () => {
 
       console.log(`@___ Retrieved locations successfully ::`, response.data)
       return response.data as Location[]
+    } catch (error) {
+      console.error(`@___ Unexpected error on retrieving locations :: ${error}`)
+      return undefined
+    }
+  }
+
+  const getLocationsByChannel = async (): Promise<Location[] | undefined> => {
+    try {
+      const response = await appStore.handleApiRequest(appStore.api.get(`v1/locations/channel_uuid/${appStore.thisChannel.uuid}`))
+
+      if ('error' in response) {
+        console.error(`@___ Error on retrieving locations :: ${response.error}`)
+        return undefined
+      }
+      if(response.status == HTTP_RESPONSE_STATUS.SUCCESS){
+          locations.value = response.data
+      }
+      console.log(`@___ Retrieved locations successfully ::`, response.data)
+      return response.data as Location[]
+     
     } catch (error) {
       console.error(`@___ Unexpected error on retrieving locations :: ${error}`)
       return undefined
@@ -93,11 +124,15 @@ export const useLocationStore = defineStore('location', () => {
 
   const addLocation = async (payload: Location): Promise<Location | undefined> => {
     try {
-      const response = await appStore.handleApiRequest(appStore.api.post(`/locations`, payload))
+      const response = await appStore.handleApiRequest(appStore.api.post(`v1/locations`, payload))
 
       if ('error' in response) {
         console.error(`@___ Error on adding location :: ${response.error}`)
         return undefined
+      }
+      if(response.status == HTTP_RESPONSE_STATUS.SUCCESS) {
+        thisLocation.value = response.data as Location
+        locations.value.push(response.data as Location)
       }
 
       console.log(`@___ Added location successfully ::`, response.data)
@@ -142,7 +177,7 @@ export const useLocationStore = defineStore('location', () => {
     }
 
     try {
-      const response = await appStore.handleApiRequest(appStore.api.delete(`/locations/${payload.uuid}`))
+      const response = await appStore.handleApiRequest(appStore.api.delete(`v1/locations/${payload.uuid}`))
       if ('error' in response) {
         console.error(`@___ Error on deleting location :: ${response.error}`)
         return undefined
@@ -168,5 +203,6 @@ export const useLocationStore = defineStore('location', () => {
     updateLocation,
     saveLocation,
     deleteLocation,
+    getLocationsByChannel
   }
 })
