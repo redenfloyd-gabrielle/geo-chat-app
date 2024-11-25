@@ -93,6 +93,7 @@ export const useAppStore = defineStore('app', () => {
       baseURL: `${apiURL}`,
       headers: {
         'Content-Type': 'application/json',
+        'Authorization': `Bearer ${JSON.parse(localStorage.getItem('geo_chat_session') as string)?.token}`
       }
     })
   }

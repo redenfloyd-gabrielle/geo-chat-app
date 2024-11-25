@@ -49,13 +49,13 @@ export interface Message {
 }
 
 export interface Location {
-  uuid: string,
+  uuid?: string,
   channel_uuid: string,
   user_uuid: string,
-  lattitude: string,
-  longitude: string,
+  latitude: number,
+  longitude: number,
   weather?: string
-  modified_on: number
+  modified_on?: number
 }
 
 export interface Friend {
@@ -70,4 +70,10 @@ export interface Friend {
 export interface Session {
   user: User,
   token: string
+}
+
+export interface Coordinates {
+  user_uuid?: string,
+  latitude: number,
+  longitude: number
 }
