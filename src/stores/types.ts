@@ -59,9 +59,12 @@ export interface Location {
 }
 
 export interface Friend {
+  uuid: string,
   user1_uuid: string  // UUID of the first user
   user2_uuid: string  // UUID of the second user
-  created_on: string  // Timestamp when they became friends
+  created_on: number  // Timestamp when they became friends
+  user1?: User,
+  user2?: User
 }
 
 export interface Session {

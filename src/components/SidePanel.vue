@@ -46,12 +46,13 @@
     <!-- Logout Section -->
     <section class="logout-section">
       <button class="btn btn-seconday" @click="appStore.logoutUser">Logout</button>
-      <button class="btn btn-primary" @click="">User</button>
+      <button class="btn btn-primary"
+        @click="">User</button>
     </section>
   </div>
 
   <!-- Modals -->
-  <AddChannelModal :isOpen="showAddChannelModal" :initialChannel="appStore.thisChannel" :friends="friends"
+  <AddChannelModal :isOpen="showAddChannelModal" :initialChannel="appStore.thisChannel" :friends="appStore.friends"
     @close="showAddChannelModal = false" @add-channel="addChannel" />
   <AddFriendModal :isOpen="showAddFriendModal" :friend="appStore.thisFriend" @close="showAddFriendModal = false"
     @friend-added="addFriend" />
@@ -64,20 +65,34 @@
   import AddFriendModal from "./modal/AddFriendModal.vue"
   import type { Channel, Friend, User } from "../stores/types"
   import { useSeesionStore } from "@/stores/session"
+  import { useFriendshipStore } from "@/stores/friendship"
+  import { useUserStore } from "@/stores/user"
+  import router from "@/router"
 
   const appStore = useAppStore()
   const sessionStore = useSeesionStore()
+  const friendshipStore = useFriendshipStore()
+  const userStore = useUserStore()
   const showAddChannelModal = ref(false)
   const showAddFriendModal = ref(false)
-
-  const friends = ref(appStore.friends)
 
   const addChannel = (channel: any) => {
     appStore.addChannel(channel)
   }
 
-  const addFriend = (email: string) => {
+  const addFriend = async (email: string) => {
     console.log('Friend email:', email)
+
+    const user1 = userStore.users.find(u => u.email === email)
+    if (user1) {
+      const newFriendShip = {} as Friend
+
+      newFriendShip.user1_uuid = user1.uuid
+      newFriendShip.user2_uuid = appStore.user.uuid
+      newFriendShip.created_on = Date.now()
+
+      await friendshipStore.addFriend(newFriendShip)
+    }
     // Call backend API to add friend or update friends list
   }
 

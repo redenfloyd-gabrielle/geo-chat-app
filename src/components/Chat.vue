@@ -32,18 +32,22 @@
 
 
 <script setup lang="ts">
-  import { ref, onBeforeUnmount, computed, onMounted, watch } from 'vue';
-  import { useEditor, EditorContent } from '@tiptap/vue-3';
-  import StarterKit from '@tiptap/starter-kit';
-  import Mention from '@tiptap/extension-mention';
+  import { ref, onBeforeUnmount, computed, onMounted, watch, nextTick } from 'vue'
+  import { useEditor, EditorContent } from '@tiptap/vue-3'
+  import StarterKit from '@tiptap/starter-kit'
+  import Mention from '@tiptap/extension-mention'
   import Image from '@tiptap/extension-image'
-  import type { Channel, Message } from '../stores/types';
-  import { useAppStore } from '../stores/app';
-  import { useRouter } from 'vue-router';
+  import type { Channel, Message } from '../stores/types'
+  import { useAppStore } from '../stores/app'
+  import { useRouter } from 'vue-router'
+  import { useWsStore } from '@/stores/ws'
 
   // Variable Declaration
   const appStore = useAppStore()
   const router = useRouter()
+  const wsStore = useWsStore()
+
+  const messageContainer = ref()
 
   const users = computed(() => {
     return appStore.friends
@@ -58,27 +62,17 @@
     return appStore.selectedChannel.user_uuids?.length
   })
 
-  let attachedFile = ref();
+  let attachedFile = ref()
 
   // Ref to access the file input element
-  const fileInput = ref();
+  const fileInput = ref()
 
   // Custom Mention Extension
   const CustomMention = Mention.extend({
     renderHTML({ node }) {
-      return ['span', { class: 'mention' }, `@${node.attrs.label}`];
+      return ['span', { class: 'mention' }, `@${node.attrs.label}`]
     },
-  });
-
-  const messageContainer = ref()
-
-  // Functions
-  // Function to scroll to the bottom of the message list
-  const scrollToBottom = () => {
-    if (messageContainer.value) {
-      messageContainer.value.scrollTop = messageContainer.value.scrollHeight;
-    }
-  };
+  })
 
   // Initialize Tiptap Editor
   const editor = useEditor({
@@ -101,12 +95,12 @@
       }),
     ],
     content: '',
-  });
+  })
 
   // Send Message Handler
   const sendMessage = async () => {
     if (editor.value) {
-      const content = editor.value.getHTML().trim();
+      const content = editor.value.getHTML().trim()
       if (content) {
         const newMessage = {
           user_uuid: appStore.user.uuid,
@@ -116,51 +110,105 @@
 
         await appStore.addMessage(newMessage)
 
-        editor.value.commands.clearContent();
+        editor.value.commands.clearContent()
       }
     }
-  };
+  }
 
   // Handle Enter Key Press to Send Message
   const handleKeyDown = (event: any) => {
     if (event.key === 'Enter' && !event.shiftKey) {
-      event.preventDefault(); // Prevent new line
-      sendMessage(); // Send message
+      event.preventDefault() // Prevent new line
+      sendMessage() // Send message
     }
-  };
+  }
 
   // Trigger the file input
   const triggerFileInput = () => {
     if (!fileInput.value) {
       return
     }
-    fileInput.value.click();
-  };
+    fileInput.value.click()
+  }
+
+  const convertToBase64 = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader()
+      reader.readAsDataURL(file)
+      reader.onload = () => resolve(reader.result as string) // Base64 string
+      reader.onerror = (error) => reject(error)
+    })
+  }
 
   // Handle File Upload
-  const handleFileUpload = async (event: any) => {
-    const file = event.target.files[0];
+  const handleFileUpload = async (event: Event) => {
+    const fileInput = event.target as HTMLInputElement
+    if (!fileInput.files || fileInput.files.length === 0) return
+
+    const file = fileInput.files[0]
+
+    // Convert to Base64
+    try {
+      const base64String = await convertToBase64(file)
+
+      // Save to database (replace this with your actual save logic)
+      console.log('Base64 String:', base64String)
+
+      // For demonstration, render the Base64 image immediately
+      if (editor.value) {
+        editor.value.commands.setImage({ src: base64String })
+        sendMessage() // Optional: Trigger your message send logic
+      }
+    } catch (error) {
+      console.error('Error converting file to Base64:', error)
+    }
+  }
+
+  // Handle File Upload
+  const _handleFileUpload = async (event: any) => {
+    const file = event.target.files[0]
     if (file && editor.value) {
       attachedFile.value = {
         name: file.name,
         url: URL.createObjectURL(file),
-      };
+      }
 
       editor.value.commands.setImage({ src: attachedFile.value.url })
       sendMessage()
     }
-  };
+  }
+
+  // Auto-scroll function
+  const scrollToBottom = async () => {
+    await nextTick() // Wait for DOM updates
+    if (messageContainer.value) {
+      messageContainer.value.scrollTop = messageContainer.value.scrollHeight
+    }
+  }
+
+  // Watch for new messages and scroll to the bottom
+  watch(
+    () => appStore.selectedMessages.length,
+    () => {
+      scrollToBottom()
+    },
+    { deep: true } // Ensures it reacts to content changes inside the array
+  )
 
   // Vue lifecycle
 
   onMounted(() => {
-    scrollToBottom();
+    console.log('CHAT ON MOUNTED')
+    setTimeout(() => {
+      scrollToBottom()
+    }, 100)
   })
 
   // Clean up Editor on Component Unmount
   onBeforeUnmount(() => {
-    editor.value?.destroy();
-  });
+    editor.value?.destroy()
+    wsStore.leaveChannel(appStore.selectedChannel.uuid)
+  })
 </script>
 
 

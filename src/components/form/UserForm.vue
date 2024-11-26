@@ -9,8 +9,8 @@
             </div>
 
             <div class="form-group">
-                <label for="fullname">Username</label>
-                <input class="input-text-modal" id="fullname" type="text" v-model="user.username"
+                <label for="username">Username</label>
+                <input class="input-text-modal" id="username" type="text" v-model="user.username"
                     placeholder="Enter username" required />
             </div>
 
@@ -96,7 +96,8 @@
 
     // Handle form submission
     const handleSubmit = () => {
-        if (route.fullPath.includes('registration')) {
+        console.log('Register User :: ', user.value, route.fullPath)
+        if (route.fullPath.includes('register')) {
             // Register user
             userStore.registerUser(user.value)
         }
@@ -108,7 +109,7 @@
 
     // Handle cancel action
     const cancel = () => {
-        if (route.fullPath.includes('registration')) {
+        if (route.fullPath.includes('register')) {
             router.push('/')
         }
         else {

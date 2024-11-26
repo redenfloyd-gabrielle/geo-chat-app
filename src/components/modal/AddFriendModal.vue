@@ -27,37 +27,43 @@
 </template>
 
 <script setup lang="ts">
-  import { ref, defineEmits, watch, computed } from 'vue';
-  import { type User } from '../../stores/types';
+  import { ref, defineEmits, watch, computed, onMounted } from 'vue'
+  import { type User } from '../../stores/types'
+  import { useUserStore } from '@/stores/user'
 
   // Props
   const props = defineProps<{
-    isOpen: boolean;
-    friend: User;
-  }>();
+    isOpen: boolean
+    friend: User
+  }>()
 
   // Emit events
-  const emit = defineEmits(['close', 'friend-added']);
+  const emit = defineEmits(['close', 'friend-added'])
 
-  const friendEmail = ref();
+  const friendEmail = ref()
   const isEditMode = computed(() => !!props.friend.uuid)
+  const userStore = useUserStore()
 
   // Close modal
   const closeModal = () => {
-    emit('close');
-  };
+    emit('close')
+  }
 
   // Handle adding a friend
   const handleAddFriend = () => {
     if (friendEmail.value) {
-      emit('friend-added', friendEmail.value); // Send the friend's email to parent component
-      friendEmail.value = ''; // Clear input
-      closeModal();
+      emit('friend-added', friendEmail.value) // Send the friend's email to parent component
+      friendEmail.value = '' // Clear input
+      closeModal()
     }
-  };
+  }
 
   watch(() => props.friend, (value, _) => {
     friendEmail.value = value.email ?? ""
+  })
+
+  onMounted(async () => {
+    userStore.users = await userStore.getUsers() ?? [] as User[]
   })
 </script>
 
