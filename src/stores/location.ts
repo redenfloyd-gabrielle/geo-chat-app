@@ -42,7 +42,7 @@ export const useLocationStore = defineStore('location', () => {
 
   watch(locations, (location) =>{
     if(location){
-      mapStore.setCoordinates(location as Coordinates[])
+      mapStore.setCoordinatesState(location as Coordinates[])
     }
   })
 
@@ -182,6 +182,14 @@ export const useLocationStore = defineStore('location', () => {
         console.error(`@___ Error on deleting location :: ${response.error}`)
         return undefined
       }
+      if(response.status == HTTP_RESPONSE_STATUS.SUCCESS) {
+        thisLocation.value = {} as Location
+        const index = locations.value.findIndex((location) => location.uuid ===_location.uuid)
+        if (index !== -1) {
+          locations.value.splice(index, 1)
+        } 
+      }
+
 
       console.log(`@___ Deleted location successfully ::`, response.data)
       return response.data as Location
