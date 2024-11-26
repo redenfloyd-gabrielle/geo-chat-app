@@ -46,8 +46,7 @@
     <!-- Logout Section -->
     <section class="logout-section">
       <button class="btn btn-seconday" @click="appStore.logoutUser">Logout</button>
-      <button class="btn btn-primary"
-        @click="">User</button>
+      <button class="btn btn-primary" @click="appStore.clickUserBtn">User</button>
     </section>
   </div>
 

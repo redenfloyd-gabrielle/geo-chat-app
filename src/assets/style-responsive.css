@@ -15,4 +15,22 @@
   .go-back-btn {
     display: block;
   }
+
+  .side-panel-mobile {
+    display: block !important;
+  }
+
+  /* .logout-section {
+    position:absolute;
+    width: 100%;
+    bottom: 0;
+  } */
+
+  .ul-section{
+    height: 40vh !important;
+  }
+
+  .user-form{
+    height: 100%;
+  }
 }

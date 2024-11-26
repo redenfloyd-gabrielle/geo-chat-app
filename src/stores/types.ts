@@ -14,6 +14,11 @@ export enum HTTP_RESPONSE_STATUS {
   FAIL = 'fail'
 }
 
+export enum WS_EVENT {
+  MESSAGE = 'message',
+  COORDINATES = 'coordinates'
+}
+
 export interface User {
   uuid: string,
   fullname: string,
@@ -85,4 +90,9 @@ export interface _Marker {
   marker?: L.Marker
   location?: string,
   weather?: string
+}
+
+export interface WebsocketMessage {
+  event: WS_EVENT,
+  data: Message | Coordinates
 }

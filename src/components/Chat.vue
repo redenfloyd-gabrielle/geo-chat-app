@@ -201,7 +201,7 @@
     console.log('CHAT ON MOUNTED')
     setTimeout(() => {
       scrollToBottom()
-    }, 100)
+    }, 50)
   })
 
   // Clean up Editor on Component Unmount

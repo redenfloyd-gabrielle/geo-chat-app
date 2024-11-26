@@ -7,14 +7,16 @@ import { useAppStore } from './app';
 import { useLocationStore } from './location';
 import { useChannelStore } from './channel';
 import { useUserStore } from './user';
-import type { _Marker, Coordinates, Location } from './types';
+import { WS_EVENT, type _Marker, type Coordinates, type Location, type WebsocketMessage } from './types';
 import { useRouter } from 'vue-router';
+import { useWsStore } from './ws'
 
 export const useMapStore = defineStore('map', () => {
   const userStore = useUserStore()
   const appStore = useAppStore()
   const channelStore = useChannelStore()
   const locationStore = useLocationStore()
+  const wsStore = useWsStore()
   //
   const thisCoordinates = ref<Coordinates>({latitude:10.31672, longitude:123.89071})
   const coordinates = ref([] as Coordinates[]) // <<Coordinates>>([]);
@@ -78,6 +80,11 @@ export const useMapStore = defineStore('map', () => {
     const { latitude, longitude } = newValue
     if (JSON.stringify(newValue) !== JSON.stringify(oldValue)) {
       map.value?.setView([latitude, longitude], zoom.value)
+      const wsMessage = {
+        event: WS_EVENT.COORDINATES,
+        data: newValue
+      } as WebsocketMessage
+      wsStore.sendMessage(wsMessage)
     }
   },{deep:true})
 

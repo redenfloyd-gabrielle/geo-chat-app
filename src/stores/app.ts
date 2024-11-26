@@ -1,7 +1,7 @@
 import { defineStore } from "pinia"
 import { computed, ref, watch } from "vue"
-import type { Message, User, Channel, Session, Coordinates, _Marker } from "./types"
-import { HTTP_RESPONSE_STATUS, LOGIN_STATUS } from "./types"
+import type { Message, User, Channel, Session, Coordinates, _Marker, WebsocketMessage } from "./types"
+import { HTTP_RESPONSE_STATUS, LOGIN_STATUS, WS_EVENT } from "./types"
 import { faker } from "@faker-js/faker"
 import { useSecureStore } from "./secure"
 import { useRouter } from "vue-router"
@@ -131,8 +131,8 @@ export const useAppStore = defineStore('app', () => {
 
   const setChannel = (payload?: Channel) => {
     console.log('Select Channel : ', payload)
-    selectedChannel.value = payload  as Channel
-    thisChannel.value = payload  as Channel
+    selectedChannel.value = payload as Channel
+    thisChannel.value = payload as Channel
     mapStore.coordinates = [] as Coordinates[]
     mapStore.markers = [] as _Marker[]
     mapStore.thisCoordinates = {} as Coordinates
@@ -150,7 +150,11 @@ export const useAppStore = defineStore('app', () => {
   const addMessage = async (payload: Message) => {
     const _message = await messageStore.addMessage(payload)
     if (_message) {
-      wsStore.sendMessage(_message)
+      const wsMessage = {
+        event: WS_EVENT.MESSAGE,
+        data: _message
+      } as WebsocketMessage
+      wsStore.sendMessage(wsMessage)
       // selectedMessages.value.push(_message)
     }
   }
@@ -236,6 +240,10 @@ export const useAppStore = defineStore('app', () => {
     window.location.reload()
   }
 
+  const clickUserBtn = () => {
+    router.push({ name: 'user-detail' })
+  }
+
   const mapBtnClick = () => {
     router.push({ name: 'map' })
   }
@@ -281,7 +289,7 @@ export const useAppStore = defineStore('app', () => {
       router.push({ name: 'chat', params: { uuid: value.uuid } })
     }
     else {
-      router.push({ name: 'sidebar', params: { uuid: user.value.uuid } })
+      router.push({ name: 'home', params: { uuid: user.value.uuid } })
     }
   })
 
@@ -378,5 +386,6 @@ export const useAppStore = defineStore('app', () => {
     _generateFriends,
     _generateChannels,
     _generateMessage,
+    clickUserBtn
   }
 })
