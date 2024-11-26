@@ -1,10 +1,7 @@
 <template>
   <div class="map-container">
     <Loading :is-show="mapStore.isLoading" @click-cancel-btn="mapStore.isLoading = false" />
-    <div :class="mapStore.isLoading ? 'loading-screen loading' : ''">
-      <div id="map"></div>
-      
-    </div>
+    <div :class="{'loading-screen':mapStore.isLoading || mapStore.isMapLoading}" id="map"></div>
   </div>
 </template>
 
@@ -23,9 +20,6 @@
     await locationStore.getLocationsByChannel()
   })
 
-  onUnmounted(async() =>{
-    mapStore.mapInstance('map')
-  })
 </script>
 
 <style scoped></style>

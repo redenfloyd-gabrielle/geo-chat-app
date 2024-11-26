@@ -67,6 +67,8 @@ footer {
 
 .loading-screen {
   filter: blur(6px);
+  z-index: 9999 !important;
+
 }
 
 #map {
@@ -75,9 +77,9 @@ footer {
 }
 
 .map-avatar {
-  /* border-radius: 50%; */
+  border-radius: 50%;
   overflow: hidden;
-  /* box-shadow: rgba(0, 0, 0, 0.35) 0px 5px 15px; */
+  /* box-shadow: rgba(0, 0, 0, 0.247) 0px 5px 15px; */
   /* display: inline-block; */
   
 }
@@ -97,6 +99,7 @@ footer {
   border: 0;
   border-radius: 5px;
   cursor: pointer;
+
 }
 
 .new-action-btn {
