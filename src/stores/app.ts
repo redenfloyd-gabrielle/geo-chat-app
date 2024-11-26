@@ -231,6 +231,10 @@ export const useAppStore = defineStore('app', () => {
     window.location.reload()
   }
 
+  const clickUserBtn = () => {
+    router.push({ name: 'user-detail' })
+  }
+
   const mapBtnClick = () => {
     router.push({ name: 'map' })
   }
@@ -276,7 +280,7 @@ export const useAppStore = defineStore('app', () => {
       router.push({ name: 'chat', params: { uuid: value.uuid } })
     }
     else {
-      router.push({ name: 'sidebar', params: { uuid: user.value.uuid } })
+      router.push({ name: 'home', params: { uuid: user.value.uuid } })
     }
   })
 
@@ -373,5 +377,6 @@ export const useAppStore = defineStore('app', () => {
     _generateFriends,
     _generateChannels,
     _generateMessage,
+    clickUserBtn
   }
 })

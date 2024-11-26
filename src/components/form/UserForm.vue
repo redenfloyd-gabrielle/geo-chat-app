@@ -20,13 +20,13 @@
                     required />
             </div>
 
-            <div v-if="!isEditMode" class="form-group">
+            <div v-if="!hasUser" class="form-group">
                 <label for="password">Password</label>
                 <input class="input-text-modal" id="password" type="password" v-model="user.password"
                     placeholder="Enter password" required />
             </div>
 
-            <div v-if="!isEditMode" class="form-group">
+            <div v-if="!hasUser" class="form-group">
                 <label for="password">Confirm Password</label>
                 <input class="input-text-modal" id="confirmp-password" type="password" v-model="confirmPassword"
                     placeholder="Enter password" required />
@@ -34,7 +34,7 @@
 
             <div class="form-actions">
                 <button type="submit" class="btn btn-primary">
-                    {{ isEditMode ? 'Update User' : 'Register User' }}
+                    {{ hasUser ? 'Update User' : 'Register User' }}
                 </button>
                 <button type="button" class="btn btn-secondary" @click="cancel">
                     Cancel
@@ -45,7 +45,7 @@
 </template>
 
 <script setup lang="ts">
-    import { ref, defineEmits, watch, computed } from 'vue'
+    import { ref, watch, computed, onMounted } from 'vue'
     import type { User } from '../../stores/types' // Adjust path to your User interface
     import { useRoute, useRouter } from 'vue-router'
     import { useAppStore } from '../../stores/app'
@@ -95,14 +95,16 @@
     )
 
     // Handle form submission
-    const handleSubmit = () => {
+    const handleSubmit = async () => {
         console.log('Register User :: ', user.value, route.fullPath)
         if (route.fullPath.includes('register')) {
             // Register user
-            userStore.registerUser(user.value)
+            await userStore.registerUser(user.value)
+            router.push({ name: 'login' })
         }
         else {
             // Update User
+            appStore.user = await userStore.updateUser(user.value) ?? user.value
             emit('submit', { ...user.value }) // Send user data to parent component
         }
     }
@@ -113,11 +115,19 @@
             router.push('/')
         }
         else {
-            //Close 
-            emit('cancel')
-
+            router.push({name: 'home'})
         }
     }
+
+    const hasUser = computed(() => {
+        return !!user.value.uuid
+    })
+
+    onMounted(() => {
+        if (appStore.user.uuid) {
+            user.value = appStore.user
+        }
+    })
 </script>
 
 <style scoped>
