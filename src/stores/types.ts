@@ -73,7 +73,16 @@ export interface Session {
 }
 
 export interface Coordinates {
+  channel_uuid?: string,
   user_uuid?: string,
   latitude: number,
   longitude: number
+}
+
+export interface _Marker {
+  user_uuid?: string,
+  channel_uuid?: string,
+  marker?: L.Marker
+  location?: string,
+  weather?: string
 }
