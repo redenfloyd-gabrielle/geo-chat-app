@@ -1,12 +1,13 @@
 import { defineStore } from "pinia"
 import { ref, watch } from "vue"
-import { HTTP_RESPONSE_STATUS, LOGIN_STATUS, type Session, type User } from "./types"
+import { HTTP_RESPONSE_STATUS, LOGIN_STATUS, type Friend, type Session, type User } from "./types"
 import { useRouter } from "vue-router"
 import { useAuthStore } from "./auth"
 import { useUserStore } from "./user"
 import { useAppStore } from "./app"
 import dayjs from "dayjs"
 import { useChannelStore } from "./channel"
+import { useFriendshipStore } from "./friendship"
 
 export const useSeesionStore = defineStore('session', () => {
 
@@ -17,6 +18,7 @@ export const useSeesionStore = defineStore('session', () => {
     const channelStore = useChannelStore()
     const appStore = useAppStore()
     const userStore = useUserStore()
+    const friendshipStore = useFriendshipStore()
 
     const loginUser = async (username: string, password: string): Promise<LOGIN_STATUS> => {
         // auth/loing (email, password)
@@ -87,6 +89,9 @@ export const useSeesionStore = defineStore('session', () => {
 
     watch(session, async (value) => {
         if (value?.user) {
+            // Assign existing token
+            appStore.addInstanceHeader('Authorization', `Bearer ${value.token as string}`)
+
             // Validate USER
             const _user = session.value?.user ?? {} as User
             appStore.user = await userStore.getUserByUuid(_user) ?? {} as User
@@ -95,7 +100,6 @@ export const useSeesionStore = defineStore('session', () => {
                 console.error('User not valid')
                 appStore.logoutUser()
             }
-
 
             const user_uuid = appStore.user.uuid ?? ''
             router.push({ name: 'home', params: { uuid: user_uuid } })
@@ -119,6 +123,8 @@ export const useSeesionStore = defineStore('session', () => {
             }
 
             // Get Friends by user_uuid
+            friendshipStore.friendships = await friendshipStore.getFriendByUserUuid(_user.uuid) ?? [] as Friend[]
+
         }
         else {
             logoutUser()
@@ -132,6 +138,7 @@ export const useSeesionStore = defineStore('session', () => {
     }
 
     const getSession = (): Session | null => {
+        console.log('Get Session')
         const _session = localStorage.getItem('geo_chat_session')
         if (_session) {
             const __session = JSON.parse(_session) as Session
@@ -145,12 +152,6 @@ export const useSeesionStore = defineStore('session', () => {
         localStorage.removeItem('geo_chat_session')
         session.value = {} as Session
     }
-
-    watch(session, (value) => {
-        if (value?.user) {
-            router.push({ name: 'home' })
-        }
-    })
 
     return {
         session,

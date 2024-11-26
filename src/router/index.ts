@@ -13,17 +13,17 @@ const router = createRouter({
       component: () => import('../components/form/LoginForm.vue'), // LOGIN PAGE
     },
     {
-      path: '/', //login user UUID
+      path: '/:uuid', //login user UUID
       name: 'home',
       component: () => import('../components/view/MainView.vue'),
       props: true,
       children: [
-        // {
-        //   path: '',
-        //   name: 'sidebar',
-        //   component: () => import('../components/SidePanel.vue'),
-        //   props: true,
-        // },
+        {
+          path: '/:uuid',
+          name: 'sidebar',
+          component: () => import('../components/form/UserForm.vue'),
+          props: true,
+        },
         {
           path: 'chat/:uuid',
           name: 'chat',
