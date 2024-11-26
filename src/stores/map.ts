@@ -41,9 +41,6 @@ export const useMapStore = defineStore('map', () => {
 
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '&copy; OpenStreetMap contributors',}).addTo(map.value as L.Map);
 
-
-
-
   const sendLocatonControl = L.Control.extend({
     onAdd: function () {
       sendLocationButtonElement = L.DomUtil.create('button', 'primary-btn');
@@ -87,10 +84,30 @@ export const useMapStore = defineStore('map', () => {
   const bindPopup = async (marker: _Marker) => {
     const content = await Promise.all([
       getWeather((marker.marker as any)._latlng.lat, (marker.marker as any)._latlng.lng),
-      getLocation((marker.marker as any)._latlng.lat, (marker.marker as any)._latlng.lng),
-      appStore.getUserFullname(marker.user_uuid as string) ?? "Me"
+      appStore.getUserFullname(marker.user_uuid as string) ?? "Me",
+      getLocation((marker.marker as any)._latlng.lat, (marker.marker as any)._latlng.lng)
     ])
-    marker.marker?.bindPopup(`${content[0]} <br> ${content[1]} <br> ${content[2]}`)
+    marker.marker?.bindPopup(`
+      <div class="tooltip-container">
+        <div class="is-flex justify-content-end ">
+          <div class="tooltip-weather">
+            ${content[0]}
+          </div>
+        </div>
+        <div class="is-flex justify-content-center flex-direction-column align-items-center">
+          <img class="p-1 img-avatar" src="${faker.image.avatar()}" alt="Avatar">
+          <h1 class="img-avatar-name"> ${content[1]}</h1>
+        </div>
+        <div>
+         <h3>Address</h3>
+         </div>   
+        <div class="is-flex justify-content-center   align-items-center">
+          <span class="tooltip-address">
+            ${content[2]}
+          </span>
+        </div>
+      </div>
+    `)     
     if(marker.user_uuid == appStore.user.uuid) marker.marker?.openPopup()
     const avatar = L.icon({
       iconUrl: '/src/assets/pin-green.png',
@@ -255,7 +272,7 @@ export const useMapStore = defineStore('map', () => {
             default:
               condition = ' Unknown';
           }
-          return weather.current_weather.temperature + weather.current_weather_units.temperature + ' ' +condition
+          return weather.current_weather.temperature + weather.current_weather_units.temperature + ' ' + condition
         }
       })
     } catch (error) {

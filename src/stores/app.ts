@@ -14,7 +14,6 @@ import { useChannelStore } from "./channel"
 import { useWsStore } from "./ws"
 import { useMapStore } from "./map"
 import { useFriendshipStore } from "./friendship"
-import { map } from "leaflet"
 
 const apiURL = import.meta.env.VITE_API_URL
 
