@@ -18,7 +18,7 @@ export const useMapStore = defineStore('map', () => {
   const locationStore = useLocationStore()
   const wsStore = useWsStore()
   //
-  const thisCoordinates = ref<Coordinates>({latitude:10.31672, longitude:123.89071})
+  const thisCoordinates = ref({} as Coordinates)
   const coordinates = ref([] as Coordinates[]) // <<Coordinates>>([]);
   const zoom = ref(12);
   const map = ref<L.Map | null>(null);
@@ -32,9 +32,10 @@ export const useMapStore = defineStore('map', () => {
 
 
   let sendLocationButtonElement: HTMLButtonElement | null = null
-
+  
+  const isMe = computed(() => coordinates.value.some(coords => coords.user_uuid === appStore.user.uuid))
   const isMapLoading = computed(() => coordinates.value.length !== markers.value.length)
-  const sendLocationButtonLabel = computed (() =>  thisCoordinates.value.user_uuid? "REMOVE LOCATION": "SEND LOCATION")
+  const sendLocationButtonLabel = computed (() =>  isMe.value? "REMOVE LOCATION": "SEND LOCATION")
   const mapInstance = computed(() => (mapId?: string) => {
     if (mapId) {
       map.value = L.map(mapId).setView([10.31672, 123.89071], zoom.value)
@@ -76,17 +77,68 @@ export const useMapStore = defineStore('map', () => {
     }
   });
 
-  watch(() => thisCoordinates.value, async(newValue, oldValue) => {
-    const { latitude, longitude } = newValue
-    if (JSON.stringify(newValue) !== JSON.stringify(oldValue)) {
-      map.value?.setView([latitude, longitude], zoom.value)
-      const wsMessage = {
-        event: WS_EVENT.COORDINATES,
-        data: newValue
-      } as WebsocketMessage
-      wsStore.sendMessage(wsMessage)
-    }
+  watch( () => thisCoordinates.value, async(newValue, oldValue) => {
+    
+    const  {latitude, longitude} = newValue
+    console.log("thisCoordinates::",newValue)
+    if(latitude && longitude){
+      map.value?.setView([newValue.latitude,newValue.longitude])
+     }
+     
+    const message = {
+      user_uuid: appStore.user.uuid,
+      channel_uuid: appStore.thisChannel.uuid,
+      ...newValue
+    } as Coordinates
+
+    const wsMessage = {
+      event: WS_EVENT.COORDINATES,
+      data: message
+    } as WebsocketMessage
+    wsStore.sendMessage(wsMessage)
+  
+
   },{deep:true})
+
+
+  watch(markers, (newMarkers)=>{
+    newMarkers.forEach((mark) => {
+      const { user_uuid, channel_uuid, marker, location, weather } = mark
+      const _marker = {
+        user_uuid,
+        channel_uuid,
+        marker,
+        location,
+        weather,
+      } as _Marker
+
+      bindPopup(_marker);
+    })
+  })
+  
+  watch(coordinates, (coordinates) => {
+    coordinates.filter(coordinate => !markers.value.some(mark => mark.user_uuid === coordinate.user_uuid)).map((coordinate)=>{
+      
+      const avatar = L.icon({
+        iconUrl: '/src/assets/pin-red.png',
+        iconSize: [80, 80],
+        iconAnchor: [40, 65],
+        popupAnchor: [0, -50],
+        className: 'map-avatar'
+      })
+     
+      const marker = L.marker([coordinate.latitude, coordinate.longitude],).addTo(map.value as L.Map)
+      marker.setIcon(avatar)
+      const mark = {user_uuid: coordinate.user_uuid, marker: marker} as _Marker
+      markers.value = [mark, ...markers.value]
+    })
+  },{deep:true})
+
+  watch(isLoading, (value) => {
+    if (value) {
+      isMe.value ?  removeMyLocation() : sendMyLocation() 
+    }
+  })
 
   const bindPopup = async (marker: _Marker) => {
     const content = await Promise.all([
@@ -126,45 +178,6 @@ export const useMapStore = defineStore('map', () => {
     marker.marker?.setIcon(avatar)
   }
 
-  watch(markers, (newMarkers)=>{
-    newMarkers.forEach((mark) => {
-      const { user_uuid, channel_uuid, marker, location, weather } = mark
-      const _marker = {
-        user_uuid,
-        channel_uuid,
-        marker,
-        location,
-        weather,
-      } as _Marker
-
-      bindPopup(_marker);
-    })
-  })
-  
-  watch(coordinates, (coordinates) => {
-    coordinates.filter(coordinate => !markers.value.some(mark => mark.user_uuid === coordinate.user_uuid)).map((coordinate)=>{
-      const avatar = L.icon({
-        iconUrl: '/src/assets/pin-red.png',
-        iconSize: [80, 80],
-        iconAnchor: [40, 65],
-        popupAnchor: [0, -50],
-        className: 'map-avatar'
-      })
-
-      if(coordinate.user_uuid == appStore.user.uuid) thisCoordinates.value = coordinate
-      const marker = L.marker([coordinate.latitude, coordinate.longitude],).addTo(map.value as L.Map)
-     marker.setIcon(avatar)
-      const mark = {user_uuid: coordinate.user_uuid, marker: marker} as _Marker
-      markers.value = [mark, ...markers.value]
-    })
-  },{deep:true})
-
-  watch(isLoading, (value) => {
-    if (value) {
-      thisCoordinates.value.user_uuid ?  removeMyLocation() : sendMyLocation() 
-    }
-  })
-
   const sendMyLocation = () => {
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(async (position) => {
@@ -187,8 +200,7 @@ export const useMapStore = defineStore('map', () => {
           
           await locationStore.addLocation(payload).then((response) =>{
             if(response){
-              thisCoordinates.value = {user_uuid: appStore.user.uuid, latitude:latitude, longitude: longitude}
-              coordinates.value.push({user_uuid: appStore.user.uuid, latitude:latitude, longitude: longitude})
+              thisCoordinates.value = {user_uuid: appStore.user.uuid, channel_uuid: appStore.thisChannel.uuid, latitude:latitude, longitude: longitude}
               isLoading.value = false 
             }
           })
@@ -206,15 +218,10 @@ export const useMapStore = defineStore('map', () => {
     const idx = coordinates.value.findIndex(coord => coord.user_uuid === appStore.user.uuid)
     if(idx != -1){
       const myLocation = locationStore.locations.find(location => location.user_uuid == coordinates.value[idx].user_uuid) as Location
-      
       await locationStore.deleteLocation(myLocation).then(async () =>{
-        coordinates.value = [...coordinates.value.slice(0, idx), ...coordinates.value.slice(idx + 1)]
-        thisCoordinates.value = {latitude:10.31672, longitude:123.89071} as Coordinates
-        const markerIndex = markers.value.findIndex(mark => mark.user_uuid === myLocation.user_uuid)
-        if (markerIndex !== -1) {
-          markers.value[markerIndex].marker?.remove()
-          markers.value.splice(markerIndex, 1);
-        }
+        map.value?.setView([10.31672, 123.89071])
+        thisCoordinates.value = {} as Coordinates
+        
         isLoading.value = false
       })
     }
@@ -363,6 +370,26 @@ export const useMapStore = defineStore('map', () => {
     })) as Coordinates[]
   }
 
+  const synchronizeCoordinates = (payload: Coordinates) => {
+    const { latitude, longitude, user_uuid } = payload
+
+    if (latitude && longitude) {
+      coordinates.value.push(payload as Coordinates)
+      return
+    }
+
+    const idx = coordinates.value.findIndex(coord => coord.user_uuid === user_uuid)
+    if (idx === -1) return
+  
+    const markerIndex = markers.value.findIndex(marker => marker.user_uuid === user_uuid)
+    if (markerIndex !== -1) {
+      markers.value[markerIndex].marker?.remove()
+      markers.value.splice(markerIndex, 1)
+    }
+  
+    coordinates.value.splice(idx, 1)
+  }
+
   return {
     routingControl,
     thisCoordinates,
@@ -377,6 +404,7 @@ export const useMapStore = defineStore('map', () => {
     sendLocationButtonLabel,
     getLocation,
     _generateFakeData,
-    setCoordinatesState
+    setCoordinatesState,
+    synchronizeCoordinates
   };
 });

@@ -4,7 +4,8 @@ import { io, Socket } from "socket.io-client"
 import { WS_EVENT, type Coordinates, type Message, type WebsocketMessage } from "./types"
 import { useAppStore } from "./app"
 import { useMapStore } from "./map"
-
+import { useLocationStore } from "./location"
+import { marker } from "leaflet"
 const socketUrl = import.meta.env.VITE_WEBSOCKET_URL
 
 export const useWsStore = defineStore('ws', () => {
@@ -12,7 +13,7 @@ export const useWsStore = defineStore('ws', () => {
   const connection_id = ref('')
   const appStore = useAppStore()
   const mapStore = useMapStore()
-
+  const locationStore = useLocationStore()
   const initializeSocketEvents = function () {
     // Listen for connection events
     socket.value?.on('connect', () => {
@@ -72,19 +73,23 @@ export const useWsStore = defineStore('ws', () => {
   }
 
   const messageListener = (message: WebsocketMessage) => {
+    
     const { event, data } = message
-    if (event === WS_EVENT.MESSAGE) {
-      if (appStore.selectedChannel.uuid === data.channel_uuid) {
-        appStore.selectedMessages.push(data as Message)
-      }
-    }
-    else if (event === WS_EVENT.COORDINATES) {
-      if (appStore.selectedChannel.uuid === data.channel_uuid) {
-        mapStore.thisCoordinates = { ...data as Coordinates }
-      }
-    }
-  }
+    switch(event){
 
+      case WS_EVENT.MESSAGE:
+        if (appStore.selectedChannel.uuid === data.channel_uuid) {
+          appStore.selectedMessages.push(data as Message)
+        }
+      break
+      case WS_EVENT.COORDINATES:
+        if (appStore.selectedChannel.uuid === data.channel_uuid) {
+          mapStore.synchronizeCoordinates(data as Coordinates)
+        }
+      break
+    }
+
+  }
 
   return {
     connect,
