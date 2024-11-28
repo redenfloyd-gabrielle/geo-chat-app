@@ -13,7 +13,7 @@
       </div>
       <div class="ul-section">
         <ul>
-          <li v-for="(channel, index) in appStore.channels" :key="index"
+          <li v-for="(channel, index) in appStore.groupChannels" :key="index"
             :class="{ active: channel.uuid === selectedChannel.uuid }" @click="appStore.setChannel(channel)">
             <div>
               {{ channel.name }}
