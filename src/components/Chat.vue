@@ -2,9 +2,8 @@
   <div class="chat-container">
     <div class="btn-container">
       <button class="btn btn-secondary" @click="appStore.mapBtnClick"> Map </button>
-      <button class="btn btn-secondary go-back-btn" @click="appStore.setChannel()">Go Back</button>
+      <button class="btn btn-secondary go-back-btn" @click="router.push({ name: 'home', params: { uuid: userStore.thisUser.uuid } })">Go Back</button>
     </div>
-
     <div class="channel-header">
       <h2>{{ channel.name }}</h2>
       <p>{{ channelParticipants ?? 0 }} participants</p>
@@ -23,7 +22,7 @@
 
     <div class="editor-container">
       <input hidden ref="fileInput" id="attachedFile" type="file" @change="handleFileUpload" class="file-input" />
-      <button @click="triggerFileInput" class="attach-file-button">Attach File</button>
+      <button @click="triggerFileInput" class="attach-file-button ">Attach File</button>
       <EditorContent :editor="editor" class="editor" @keydown="handleKeyDown" />
       <button @click="sendMessage" class="send-button">Send</button>
     </div>
@@ -39,6 +38,7 @@
   import Image from '@tiptap/extension-image'
   import type { Channel, Message } from '../stores/types'
   import { useAppStore } from '../stores/app'
+  import { useUserStore } from '../stores/user'
   import { useRouter } from 'vue-router'
   import { useWsStore } from '@/stores/ws'
 
@@ -46,7 +46,7 @@
   const appStore = useAppStore()
   const router = useRouter()
   const wsStore = useWsStore()
-
+  const userStore = useUserStore()
   const messageContainer = ref()
 
   const users = computed(() => {

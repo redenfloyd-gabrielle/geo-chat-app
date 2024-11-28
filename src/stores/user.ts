@@ -138,7 +138,7 @@ export const useUserStore = defineStore('user', () => {
 
   const registerUser = async (payload: User): Promise<User | undefined> => {
     try {
-      payload.password = await secureStore.hashPassword(payload.password)
+      // payload.password = await secureStore.hashPassword(payload.password)
       const response = await appStore.handleApiRequest(appStore.api.post(`auth/register`, payload))
 
       if ('error' in response) {
