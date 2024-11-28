@@ -2,11 +2,16 @@
   <div class="chat-container">
     <div class="btn-container">
       <button class="btn btn-secondary" @click="appStore.mapBtnClick"> Map </button>
-      <button class="btn btn-secondary go-back-btn" @click="router.push({ name: 'home', params: { uuid: userStore.thisUser.uuid } })">Go Back</button>
+      <button class="btn btn-secondary go-back-btn"
+        @click="router.push({ name: 'home', params: { uuid: userStore.thisUser.uuid } })">Go Back</button>
     </div>
-    <div class="channel-header">
+    <div v-if="channel.type === CHANNEL_TYPE.GROUP" class="channel-header">
       <h2>{{ channel.name }}</h2>
       <p>{{ channelParticipants ?? 0 }} participants</p>
+    </div>
+    <div v-if="channel.type === CHANNEL_TYPE.DIRECT_MESSAGE" class="channel-header">
+      <h2>{{ friendName }}</h2>
+      <!-- <p>{{ channelParticipants ?? 0 }} participants</p> -->
     </div>
 
     <div ref="messageContainer" class="message-list">
@@ -21,7 +26,8 @@
     </div>
 
     <div class="editor-container">
-      <input hidden ref="fileInput" id="attachedFile" type="file" @change="handleFileUpload" class="file-input" />
+      <input hidden ref="fileInput" id="attachedFile" accept="image/*" type="file" @change="handleFileUpload"
+        class="file-input" />
       <button @click="triggerFileInput" class="attach-file-button ">Attach File</button>
       <EditorContent :editor="editor" class="editor" @keydown="handleKeyDown" />
       <button @click="sendMessage" class="send-button">Send</button>
@@ -36,11 +42,12 @@
   import StarterKit from '@tiptap/starter-kit'
   import Mention from '@tiptap/extension-mention'
   import Image from '@tiptap/extension-image'
-  import type { Channel, Message } from '../stores/types'
+  import { CHANNEL_TYPE, type Channel, type Message } from '../stores/types'
   import { useAppStore } from '../stores/app'
   import { useUserStore } from '../stores/user'
   import { useRouter } from 'vue-router'
   import { useWsStore } from '@/stores/ws'
+  import { useHelperStore } from '@/stores/helper'
 
   // Variable Declaration
   const appStore = useAppStore()
@@ -48,6 +55,7 @@
   const wsStore = useWsStore()
   const userStore = useUserStore()
   const messageContainer = ref()
+  const helperStore = useHelperStore()
 
   const users = computed(() => {
     return appStore.friends
@@ -149,14 +157,16 @@
 
     // Convert to Base64
     try {
-      const base64String = await convertToBase64(file)
+      // const base64String = await convertToBase64(file)
+      const filePath = await helperStore.uploadFileViaFormData(file)
+      // const _filePath = await helperStore.uploadFile(file)
 
       // Save to database (replace this with your actual save logic)
-      console.log('Base64 String:', base64String)
+      console.log('filePath String:', filePath)
 
       // For demonstration, render the Base64 image immediately
-      if (editor.value) {
-        editor.value.commands.setImage({ src: base64String })
+      if (editor.value && filePath) {
+        editor.value.commands.setImage({ src: filePath })
         sendMessage() // Optional: Trigger your message send logic
       }
     } catch (error) {
@@ -194,6 +204,13 @@
     },
     { deep: true } // Ensures it reacts to content changes inside the array
   )
+
+  const friendName = computed(() => {
+    const friend = channel.value.users?.find(f => f.uuid !== appStore.user.uuid)
+    if (friend) {
+      return friend.fullname
+    }
+  })
 
   // Vue lifecycle
 

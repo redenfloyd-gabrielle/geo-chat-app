@@ -1,7 +1,7 @@
 import { defineStore } from "pinia"
 import { computed, ref, watch } from "vue"
-import type { Message, User, Channel, Session, Coordinates, _Marker, WebsocketMessage } from "./types"
-import { HTTP_RESPONSE_STATUS, LOGIN_STATUS, WS_EVENT } from "./types"
+import type { Message, User, Channel, Session, Coordinates, _Marker, WebsocketMessage, Friend } from "./types"
+import { CHANNEL_TYPE, HTTP_RESPONSE_STATUS, LOGIN_STATUS, WS_EVENT } from "./types"
 import { faker } from "@faker-js/faker"
 import { useSecureStore } from "./secure"
 import { useRouter } from "vue-router"
@@ -77,6 +77,10 @@ export const useAppStore = defineStore('app', () => {
     )
 
     return uniqueFriends
+  })
+
+  const groupChannels = computed(() => {
+    return channels.value.filter(c => c.type === CHANNEL_TYPE.GROUP)
   })
 
   const encryptMessage = async (message: string) => {
@@ -280,7 +284,11 @@ export const useAppStore = defineStore('app', () => {
       wsStore.leaveChannel(_.uuid)
     }
 
-    if (value.uuid) {
+    if (value?.uuid) {
+      if (value.type === CHANNEL_TYPE.GROUP) {
+        setFriend({} as User)
+      }
+
       // Get Messages per channel; Already implemented "const selectedMessages = computed(() => {"
       selectedMessages.value = await getMessagesByChannel(value) ?? [] as Message[]
 
@@ -291,6 +299,39 @@ export const useAppStore = defineStore('app', () => {
     else {
       router.push({ name: 'home', params: { uuid: user.value.uuid } })
     }
+  })
+
+  watch(selectedFriend, async (value) => {
+    if (!value?.uuid) {
+      return
+    }
+
+    const dmChannels = channels.value.filter(c => c.type === CHANNEL_TYPE.DIRECT_MESSAGE)
+
+    // Look for the DM channel between the selected friend and the current user
+    let existingChannel = dmChannels.find(channel => {
+      const members = channel.user_uuids || [] // Ensure channel.members is defined
+      return members.includes(value.uuid) && members.includes(user.value.uuid)
+    })
+
+    if (existingChannel) {
+      console.log('Existing DM channel found:', existingChannel)
+      // Perform actions with the existing channel if needed
+      setChannel(existingChannel)
+    } else {
+      console.log('No DM channel found. You might want to create one.')
+      // Logic to create a new DM channel or notify the user
+      const newDMChannel = {} as Channel
+      newDMChannel.uuid = ''
+      newDMChannel.name = CHANNEL_TYPE.DIRECT_MESSAGE
+      newDMChannel.type = CHANNEL_TYPE.DIRECT_MESSAGE
+      newDMChannel.user_uuids = [value.uuid, user.value.uuid]
+      newDMChannel.created_on = new Date().toISOString()
+
+      existingChannel = await channelStore.addChannel(newDMChannel)
+    }
+
+    setChannel(existingChannel)
   })
 
   // Faker
@@ -368,6 +409,7 @@ export const useAppStore = defineStore('app', () => {
     selectedMessages,
     users,
     thisFriend,
+    groupChannels,
     initializeApiInstance,
     addInstanceHeader,
     handleApiRequest,

@@ -24,6 +24,7 @@ export interface User {
   fullname: string,
   username: string,
   email: string,
+  image_url?: string,
   password: string,
   created_on: number
 }
@@ -39,6 +40,7 @@ export interface Channel {
   uuid: string,
   name: string,
   user_uuids: string[],
+  users?: User[],
   type: CHANNEL_TYPE,
   created_on: string
 }
