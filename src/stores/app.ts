@@ -16,6 +16,7 @@ import { useMapStore } from "./map"
 import { useFriendshipStore } from "./friendship"
 
 const apiURL = import.meta.env.VITE_API_URL
+const secretString = import.meta.env.VITE_ENCRYPTION_SECRET_KEY
 
 export const useAppStore = defineStore('app', () => {
   const sessionStore = useSeesionStore()
@@ -46,7 +47,7 @@ export const useAppStore = defineStore('app', () => {
   const secureStore = useSecureStore()
   const router = useRouter()
 
-  const secretString = '3a7eca62-bdc6-44f0-8f3e-abf909c44cf7' // this should be moved to .env
+  // const secretString = //'3a7eca62-bdc6-44f0-8f3e-abf909c44cf7' // this should be moved to .env
 
   const decryptMessages = ref([] as string[])
 
