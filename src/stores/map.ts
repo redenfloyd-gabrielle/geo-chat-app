@@ -7,7 +7,7 @@ import { useAppStore } from './app';
 import { useLocationStore } from './location';
 import { useChannelStore } from './channel';
 import { useUserStore } from './user';
-import { LOCATION_PERMISSION, WS_EVENT, type _Marker, type Coordinates, type Location, type WebsocketMessage } from './types';
+import { LOCATION_PERMISSION, WS_EVENT, type _Marker, type Coordinates, type Coords, type Location, type WebsocketMessage } from './types';
 import { useRouter } from 'vue-router';
 import { useWsStore } from './ws'
 
@@ -29,13 +29,14 @@ export const useMapStore = defineStore('map', () => {
   const routingControl = ref();
   const router = useRouter()
   const markers = ref([] as _Marker[]);
+  const isMapLoading = ref(false)
   const isLocationInActive = ref(false)
-
+  
   let sendLocationButtonElement: HTMLButtonElement | null = null
   
-
+  
   const isMe = computed(() => coordinates.value.some(coords => coords.user_uuid === appStore.user.uuid))
-  const isMapLoading = computed(() => coordinates.value.length !== markers.value.length)
+  const isMarkerLoading = computed(() => coordinates.value.length !== markers.value.length)
   const sendLocationButtonLabel = computed (() =>  isMe.value? "REMOVE LOCATION": "SEND LOCATION")
   const mapInstance = computed(() => (mapId?: string) => {
     if (mapId) {
@@ -179,40 +180,82 @@ export const useMapStore = defineStore('map', () => {
     marker.marker?.setIcon(avatar)
   }
 
-  const sendMyLocation = () => {
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(async (position) => {
-
-        console.log("POSITION::",position)
-        const latitude = position.coords.latitude
-        const longitude = position.coords.longitude
-
-        try {
-          weather.value = await getWeather(latitude, longitude) as string
-          location.value = await getLocation(latitude, longitude) as string
-          
-          const payload: Location = {
-            channel_uuid: appStore.thisChannel.uuid,
-            user_uuid: appStore.user.uuid,
-            latitude: latitude,
-            longitude: longitude,
-            weather: weather.value,
-          }
-          
-          await locationStore.addLocation(payload).then((response) =>{
-            if(response){
-              thisCoordinates.value = {user_uuid: appStore.user.uuid, channel_uuid: appStore.thisChannel.uuid, latitude:latitude, longitude: longitude}
-              isLoading.value = false 
-            }
-          })
-        } catch (error) {
-          console.error("Error fetching data:", error)
-        }},
-        (err) => {
-          console.log("Unable to retrieve your location. Error:", err.message)
+  const getCurrentPosition = () : Promise<{ latitude: number; longitude: number }>=> {
+    isMapLoading.value= true 
+    return new Promise((resolve, reject) => {
+      navigator.geolocation.getCurrentPosition(
+        position => {
+          isMapLoading.value = false
+          resolve(position.coords)
+        },
+        error => {
+          isLocationInActive.value = true 
+          reject(error)
+          console.error('ERROR::',error)
         }
       )
-    }
+    })
+  }
+
+  const sendMyLocation =  async() => {
+    
+    await getCurrentPosition().then(async ({ latitude, longitude } ) => {
+      
+      weather.value = await getWeather(latitude, longitude) as string
+      location.value = await getLocation(latitude, longitude) as string
+      
+      const payload: Location = {
+        channel_uuid: appStore.thisChannel.uuid,
+        user_uuid: appStore.user.uuid,
+        latitude: latitude,
+        longitude: longitude,
+        weather: weather.value,
+      }
+
+      await locationStore.addLocation(payload).then((response) =>{
+        if(response){
+          thisCoordinates.value = {user_uuid: appStore.user.uuid, channel_uuid: appStore.thisChannel.uuid, latitude:latitude, longitude: longitude}
+          isLoading.value = false 
+        }
+      })
+  })
+
+
+
+
+    // if (navigator.geolocation) {
+    //   navigator.geolocation.getCurrentPosition(async (position) => {
+
+    //     console.log("POSITION::",position)
+    //     const latitude = position.coords.latitude
+    //     const longitude = position.coords.longitude
+
+    //     try {
+    //       weather.value = await getWeather(latitude, longitude) as string
+    //       location.value = await getLocation(latitude, longitude) as string
+          
+    //       const payload: Location = {
+    //         channel_uuid: appStore.thisChannel.uuid,
+    //         user_uuid: appStore.user.uuid,
+    //         latitude: latitude,
+    //         longitude: longitude,
+    //         weather: weather.value,
+    //       }
+          
+    //       await locationStore.addLocation(payload).then((response) =>{
+    //         if(response){
+    //           thisCoordinates.value = {user_uuid: appStore.user.uuid, channel_uuid: appStore.thisChannel.uuid, latitude:latitude, longitude: longitude}
+    //           isLoading.value = false 
+    //         }
+    //       })
+    //     } catch (error) {
+    //       console.error("Error fetching data:", error)
+    //     }},
+    //     (err) => {
+    //       console.log("Unable to retrieve your location. Error:", err.message)
+    //     }
+    //   )
+    // }
   }
 
   const removeMyLocation = async() =>{
@@ -391,23 +434,37 @@ export const useMapStore = defineStore('map', () => {
     coordinates.value.splice(idx, 1)
   }
 
-  const checkPermision = () => {
-    if (!navigator.geolocation) {
-        console.log("Geolocation is not supported by this browser.")
-        return false;
-    }
-    navigator.permissions.query({ name: 'geolocation' }).then((status)  => {
-      if(status.state === LOCATION_PERMISSION.GRANTED){
-        router.push({ name: 'map' })
-        isLocationInActive.value = false
-      }else {
-        isLocationInActive.value = true
-      }
-    })
-    .catch((error)  =>{
-        console.error("Error:::", error)
-    })
+  const checkPermision = async () => {
+    // getCurrentPosition
+    // router.push({ name: 'map' })
+      await getCurrentPosition().then(() => router.push({ name: 'map' }) )
+    // if (!navigator.geolocation) {
+    //     console.log("Geolocation is not supported by this browser.")
+    //     return false;
+    // }
+    // navigator.permissions.query({ name: 'geolocation' }).then((status)  => {
+    //   if(status.state === LOCATION_PERMISSION.GRANTED){
+    //     router.push({ name: 'map' })
+    //     isLocationInActive.value = false
+    //   }else {
+    //     isLocationInActive.value = true
+    //   }
+    // })
+    // .catch((error)  =>{
+    //     console.error("Error:::", error)
+    // })
+    // navigator.geolocation.getCurrentPosition(async (position) => {
+    //   // if(!position) return
+    //   if(position){
+    //     router.push({ name: 'map' })
+    //     isLocationInActive.value = false
+
+    //   }else{
+    //     isLocationInActive.value = true
+    //   }
+    // })
   }
+
 
   return {
     routingControl,
@@ -418,10 +475,11 @@ export const useMapStore = defineStore('map', () => {
     isLoading,
     weather,
     location,
-    isMapLoading,
+    isMarkerLoading,
     markers,
     sendLocationButtonLabel,
     isLocationInActive,
+    isMapLoading,
     getLocation,
     _generateFakeData,
     setCoordinatesState,
