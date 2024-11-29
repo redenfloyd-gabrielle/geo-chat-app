@@ -1,7 +1,7 @@
 <template>
   <div class="chat-container">
     <div class="btn-container">
-      <button class="btn btn-secondary" @click="appStore.mapBtnClick"> Map </button>
+      <button class="btn btn-secondary" @click="mapStore.checkPermision"> Map </button>
       <button class="btn btn-secondary go-back-btn"
         @click="router.push({ name: 'home', params: { uuid: userStore.thisUser.uuid } })">Go Back</button>
     </div>
@@ -33,6 +33,7 @@
       <button @click="sendMessage" class="send-button">Send</button>
     </div>
   </div>
+  <Modal :is-location-in-active="mapStore.isLocationInActive" @click-close-btn="mapStore.isLocationInActive = false"/>
 </template>
 
 
@@ -48,6 +49,8 @@
   import { useRouter } from 'vue-router'
   import { useWsStore } from '@/stores/ws'
   import { useHelperStore } from '@/stores/helper'
+  import { useMapStore } from '@/stores/map'
+  import Modal from './Modal.vue';
 
   // Variable Declaration
   const appStore = useAppStore()
@@ -56,7 +59,7 @@
   const userStore = useUserStore()
   const messageContainer = ref()
   const helperStore = useHelperStore()
-
+  const mapStore = useMapStore()
   const users = computed(() => {
     return appStore.friends
   })
