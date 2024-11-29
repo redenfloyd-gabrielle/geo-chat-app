@@ -7,7 +7,7 @@ import { useAppStore } from './app';
 import { useLocationStore } from './location';
 import { useChannelStore } from './channel';
 import { useUserStore } from './user';
-import { WS_EVENT, type _Marker, type Coordinates, type Location, type WebsocketMessage } from './types';
+import { LOCATION_PERMISSION, WS_EVENT, type _Marker, type Coordinates, type Location, type WebsocketMessage } from './types';
 import { useRouter } from 'vue-router';
 import { useWsStore } from './ws'
 
@@ -29,10 +29,11 @@ export const useMapStore = defineStore('map', () => {
   const routingControl = ref();
   const router = useRouter()
   const markers = ref([] as _Marker[]);
-
+  const isLocationInActive = ref(false)
 
   let sendLocationButtonElement: HTMLButtonElement | null = null
   
+
   const isMe = computed(() => coordinates.value.some(coords => coords.user_uuid === appStore.user.uuid))
   const isMapLoading = computed(() => coordinates.value.length !== markers.value.length)
   const sendLocationButtonLabel = computed (() =>  isMe.value? "REMOVE LOCATION": "SEND LOCATION")
@@ -390,6 +391,24 @@ export const useMapStore = defineStore('map', () => {
     coordinates.value.splice(idx, 1)
   }
 
+  const checkPermision = () => {
+    if (!navigator.geolocation) {
+        console.log("Geolocation is not supported by this browser.")
+        return false;
+    }
+    navigator.permissions.query({ name: 'geolocation' }).then((status)  => {
+      if(status.state === LOCATION_PERMISSION.GRANTED){
+        router.push({ name: 'map' })
+        isLocationInActive.value = false
+      }else {
+        isLocationInActive.value = true
+      }
+    })
+    .catch((error)  =>{
+        console.error("Error:::", error)
+    })
+  }
+
   return {
     routingControl,
     thisCoordinates,
@@ -402,9 +421,11 @@ export const useMapStore = defineStore('map', () => {
     isMapLoading,
     markers,
     sendLocationButtonLabel,
+    isLocationInActive,
     getLocation,
     _generateFakeData,
     setCoordinatesState,
-    synchronizeCoordinates
+    synchronizeCoordinates,
+    checkPermision
   };
 });

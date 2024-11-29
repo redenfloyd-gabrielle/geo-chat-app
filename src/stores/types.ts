@@ -19,6 +19,11 @@ export enum WS_EVENT {
   COORDINATES = 'coordinates'
 }
 
+export enum LOCATION_PERMISSION {
+  GRANTED = 'granted',
+  DENIED = 'denied',
+}
+
 export interface User {
   uuid: string,
   fullname: string,
