@@ -1,51 +1,59 @@
 import { defineStore } from 'pinia';
 import { computed, nextTick, ref, watch, watchEffect } from 'vue';
-import L, { Layer } from 'leaflet';
+import L, { bind, icon, Layer, Marker } from 'leaflet';
 import 'leaflet-routing-machine';
 import { fa, faker, fakerAF_ZA } from '@faker-js/faker';
 import { useAppStore } from './app';
 import { useLocationStore } from './location';
 import { useChannelStore } from './channel';
 import { useUserStore } from './user';
-import type { Coordinates, Location } from './types';
+import { WS_EVENT, type _Marker, type Coordinates, type Location, type WebsocketMessage } from './types';
 import { useRouter } from 'vue-router';
+import { useWsStore } from './ws'
 
 export const useMapStore = defineStore('map', () => {
   const userStore = useUserStore()
   const appStore = useAppStore()
   const channelStore = useChannelStore()
   const locationStore = useLocationStore()
+  const wsStore = useWsStore()
   //
-  const thisCoordinates = ref<Coordinates>({latitude:10.31672, longitude:123.89071})
+  const thisCoordinates = ref({} as Coordinates)
   const coordinates = ref([] as Coordinates[]) // <<Coordinates>>([]);
-  const zoom = ref(15);
+  const zoom = ref(12);
   const map = ref<L.Map | null>(null);
   const isLoading = ref(false)
+  // const isMapLoading = ref(false)
   const weather = ref('')
   const location = ref('')
   const routingControl = ref();
   const router = useRouter()
+  const markers = ref([] as _Marker[]);
 
+
+  let sendLocationButtonElement: HTMLButtonElement | null = null
+  
+  const isMe = computed(() => coordinates.value.some(coords => coords.user_uuid === appStore.user.uuid))
+  const isMapLoading = computed(() => coordinates.value.length !== markers.value.length)
+  const sendLocationButtonLabel = computed (() =>  isMe.value? "REMOVE LOCATION": "SEND LOCATION")
   const mapInstance = computed(() => (mapId?: string) => {
-    if (mapId && !map.value) {
-      const { latitude, longitude } = thisCoordinates.value
-      map.value = L.map(mapId).setView([latitude, longitude], zoom.value);
-    
+    if (mapId) {
+      map.value = L.map(mapId).setView([10.31672, 123.89071], zoom.value)
+      markers.value = [] as _Marker[]
+    }
 
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      attribution: '&copy; OpenStreetMap contributors',
-    }).addTo(map.value as L.Map);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '&copy; OpenStreetMap contributors',}).addTo(map.value as L.Map);
 
-    const sendLocatonControl = L.Control.extend({
-      onAdd: function () {
-        const button = L.DomUtil.create('button', 'primary-btn');
-        button.innerHTML = 'SEND LOCATION';
-        button.onclick = async () => {
-          isLoading.value = true
-        };
-        return button;
-      }
-    });
+  const sendLocatonControl = L.Control.extend({
+    onAdd: function () {
+      sendLocationButtonElement = L.DomUtil.create('button', 'primary-btn');
+      sendLocationButtonElement.innerHTML = sendLocationButtonLabel.value;
+      sendLocationButtonElement.onclick = async () => {
+        isLoading.value = true;
+      };
+      return sendLocationButtonElement;
+    },
+  })
 
     const goBackControl = L.Control.extend({
       onAdd: function () {
@@ -58,138 +66,147 @@ export const useMapStore = defineStore('map', () => {
       }
     });
 
-      new sendLocatonControl({ position: 'topright' }).addTo(map.value as L.Map);
-      new goBackControl({ position: 'topright' }).addTo(map.value as L.Map);
-    }
+    new sendLocatonControl({ position: 'topright'}).addTo(map.value as L.Map);
+    new goBackControl({ position: 'topright' }).addTo(map.value as L.Map);
+    
   })
 
-  watch(() => thisCoordinates.value, async(newValue, oldValue) => {
-    const { latitude, longitude } = newValue
-    if (JSON.stringify(newValue) !== JSON.stringify(oldValue)) {
-
-      map.value?.setView([latitude, longitude], zoom.value)
+  watch(sendLocationButtonLabel, (newLabel) => {
+    if (sendLocationButtonElement) {
+      sendLocationButtonElement.innerHTML = newLabel;
     }
-  })
+  });
 
-  watch(coordinates, (newValue, oldValue) => {
-    if (newValue.length > 0 && JSON.stringify(newValue) !== JSON.stringify(oldValue)) {
-      console.log("newval",newValue,"oldvale",oldValue)
-      if(!map.value) return
-      
-      map.value.eachLayer(layer => {
-        if (layer instanceof L.Marker){
-          map.value?.removeLayer(layer)
-        }
-      })
-      
-      if (routingControl.value) {
-        map.value.removeControl(routingControl.value)
-        routingControl.value = null
-      }
-
-      for(const coord of coordinates.value){
-        if(coord.user_uuid === userStore.thisUser.uuid){
-          thisCoordinates.value = coord
-        }
-        
-        const avatar = L.icon({
-          iconUrl: faker.image.avatar(),
-          iconSize: [50, 50],
-          iconAnchor: [25, 50],
-          popupAnchor: [0, -50],
-          className: 'map-avatar'
-        });
-
-        map.value.eachLayer(layer => {
-          if (layer instanceof L.Marker){
-            map.value?.removeLayer(layer)
-          }
-        })
-        map.value?.setView([coord.latitude, coord.longitude], zoom.value)
-        const marker  = L.marker([coord.latitude, coord.longitude], { icon: avatar, zIndexOffset:1000 })
-
-         new Promise((resolve) => setTimeout(resolve, 500)).then(async () =>{
-          const weather = await getWeather(coord.latitude,  coord.longitude)
-          const location = await getLocation(coord.latitude,  coord.longitude)
-          marker
-          .bindPopup(weather + '<br>' + location + '<br>' ).addTo(map.value as L.Map)
-          .addTo(map.value as L.Map)
-         })
-
-      }
+  watch( () => thisCoordinates.value, async(newValue, oldValue) => {
+    
+    const  {latitude, longitude} = newValue
+    console.log("thisCoordinates::",newValue)
+    if(latitude && longitude){
+      map.value?.setView([newValue.latitude,newValue.longitude])
+     }
      
-      routingControl.value = L.Routing.control({
-        waypoints: coordinates.value.map(coord => L.latLng(coord.latitude, coord.longitude)),
-        // routeWhileDragging: false,
-        // createMarker: () => { return null; },
-        fitSelectedRoutes: true,
-        // showAlternatives: false,
-        // altLineOptions: { // Styling for alternative routes
-        //   styles: [{ color: '#00FF00', opacity: 1, weight: 5,}],
-        //   extendToWaypoints: false, 
-        //   missingRouteTolerance: 0
-        // },
-        lineOptions: { // Styling for the main route
-          styles: [{ color: '#FF0000', opacity: 1, weight: 3 }],
-          extendToWaypoints: false,
-          missingRouteTolerance: 0
-        },
-        // draggableWaypoints: true,
-        // animate: true,
-        // animationDuration: 1000,
+    const message = {
+      user_uuid: appStore.user.uuid,
+      channel_uuid: appStore.thisChannel.uuid,
+      ...newValue
+    } as Coordinates
+
+    const wsMessage = {
+      event: WS_EVENT.COORDINATES,
+      data: message
+    } as WebsocketMessage
+    wsStore.sendMessage(wsMessage)
+  
+
+  },{deep:true})
+
+
+  watch(markers, (newMarkers)=>{
+    newMarkers.forEach((mark) => {
+      const { user_uuid, channel_uuid, marker, location, weather } = mark
+      const _marker = {
+        user_uuid,
+        channel_uuid,
+        marker,
+        location,
+        weather,
+      } as _Marker
+
+      bindPopup(_marker);
+    })
+  })
+  
+  watch(coordinates, (coordinates) => {
+    coordinates.filter(coordinate => !markers.value.some(mark => mark.user_uuid === coordinate.user_uuid)).map((coordinate)=>{
+      
+      const avatar = L.icon({
+        iconUrl: '/src/assets/pin-red.png',
+        iconSize: [80, 80],
+        iconAnchor: [40, 65],
+        popupAnchor: [0, -50],
+        className: 'map-avatar'
       })
-      .addTo(map.value as L.Map);
+     
+      const marker = L.marker([coordinate.latitude, coordinate.longitude],).addTo(map.value as L.Map)
+      marker.setIcon(avatar)
+      const mark = {user_uuid: coordinate.user_uuid, marker: marker} as _Marker
+      markers.value = [mark, ...markers.value]
+    })
+  },{deep:true})
 
-      //remove the routing list container 
-      const container = routingControl.value.getContainer()
-      const parentNode = container.parentNode
-      parentNode.removeChild(container)
-    }
-  },{
-  immediate: true,
-   deep: true
-  })
-
-  watch(isLoading, async (value) => {
+  watch(isLoading, (value) => {
     if (value) {
-      await new Promise((resolve) => setTimeout(resolve, 2000));
-      thisCoordinates.value.user_uuid ?  removeMyLocation() :  sendLocation() 
+      isMe.value ?  removeMyLocation() : sendMyLocation() 
     }
   })
 
-  const sendLocation = () => {
-    // console.log("@____centerPoint", coordiantes.value);
+  const bindPopup = async (marker: _Marker) => {
+    const content = await Promise.all([
+      getWeather((marker.marker as any)._latlng.lat, (marker.marker as any)._latlng.lng),
+      appStore.getUserFullname(marker.user_uuid as string) ?? "Me",
+      getLocation((marker.marker as any)._latlng.lat, (marker.marker as any)._latlng.lng)
+    ])
+    marker.marker?.bindPopup(`
+      <div class="tooltip-container">
+        <div class="is-flex justify-content-end ">
+          <div class="tooltip-weather">
+            ${content[0]}
+          </div>
+        </div>
+        <div class="is-flex justify-content-center flex-direction-column align-items-center">
+          <img class="p-1 img-avatar" src="${faker.image.avatar()}" alt="Avatar">
+          <h1 class="img-avatar-name"> ${content[1]}</h1>
+        </div>
+        <div>
+         <h3>Address</h3>
+         </div>   
+        <div class="is-flex justify-content-center   align-items-center">
+          <span class="tooltip-address">
+            ${content[2]}
+          </span>
+        </div>
+      </div>
+    `)     
+    if(marker.user_uuid == appStore.user.uuid) marker.marker?.openPopup()
+    const avatar = L.icon({
+      iconUrl: '/src/assets/pin-green.png',
+      iconSize: [80, 80],
+      iconAnchor: [40, 65],
+      popupAnchor: [0, -50],
+      className: 'map-avatar'
+    })
+    marker.marker?.setIcon(avatar)
+  }
+
+  const sendMyLocation = () => {
     if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        async (position) => {
-          console.log(position)
-          const latitude = position.coords.latitude;
-          const longitude = position.coords.longitude;
+      navigator.geolocation.getCurrentPosition(async (position) => {
 
-          try {
+        console.log("POSITION::",position)
+        const latitude = position.coords.latitude
+        const longitude = position.coords.longitude
 
-            weather.value = await getWeather(latitude, longitude)
-            location.value = await getLocation(latitude, longitude)
-            
-            const payload: Location = {
-              channel_uuid: appStore.thisChannel.uuid,
-              user_uuid: userStore.thisUser.uuid,
-              latitude: latitude,
-              longitude: longitude,
-              weather: weather.value,
-            }
-            await locationStore.addLocation(payload).then((response) =>{
-              console.log("@___response", response)
-              thisCoordinates.value = {user_uuid: userStore.thisUser.uuid, latitude:latitude, longitude: longitude}
-              coordinates.value = [{user_uuid: userStore.thisUser.uuid, latitude:latitude, longitude: longitude}, ...coordinates.value];
-              // coordinates.value.push({user_uuid: userStore.thisUser.uuid, latitude:latitude, longitude: longitude})
-              isLoading.value = false
-            })
-
-          } catch (error) {
-            console.error("Error fetching data:", error)
+        try {
+          weather.value = await getWeather(latitude, longitude) as string
+          location.value = await getLocation(latitude, longitude) as string
+          
+          const payload: Location = {
+            channel_uuid: appStore.thisChannel.uuid,
+            user_uuid: appStore.user.uuid,
+            latitude: latitude,
+            longitude: longitude,
+            weather: weather.value,
           }
-        },
+          
+          await locationStore.addLocation(payload).then((response) =>{
+            if(response){
+              thisCoordinates.value = {user_uuid: appStore.user.uuid, channel_uuid: appStore.thisChannel.uuid, latitude:latitude, longitude: longitude}
+              isLoading.value = false 
+            }
+          })
+        } catch (error) {
+          console.error("Error fetching data:", error)
+        }},
         (err) => {
           console.log("Unable to retrieve your location. Error:", err.message)
         }
@@ -198,13 +215,14 @@ export const useMapStore = defineStore('map', () => {
   }
 
   const removeMyLocation = async() =>{
-    const idx = coordinates.value.findIndex(coord => coord.user_uuid === userStore.thisUser.uuid)
-    if(idx  != -1){
-      const myLocation = locationStore.locations.find(location => location.user_uuid == userStore.thisUser.uuid) as Location
+    const idx = coordinates.value.findIndex(coord => coord.user_uuid === appStore.user.uuid)
+    if(idx != -1){
+      const myLocation = locationStore.locations.find(location => location.user_uuid == coordinates.value[idx].user_uuid) as Location
       await locationStore.deleteLocation(myLocation).then(async () =>{
+        map.value?.setView([10.31672, 123.89071])
+        thisCoordinates.value = {} as Coordinates
+        
         isLoading.value = false
-        thisCoordinates.value = {latitude:10.31672, longitude: 123.89071}
-        coordinates.value = [...coordinates.value.slice(0, idx), ...coordinates.value.slice(idx + 1)];
       })
     }
   }
@@ -216,7 +234,7 @@ export const useMapStore = defineStore('map', () => {
         const weather = await response.json()
         if (weather) {
           const weatherCondition = weather.current_weather.weathercode;
-          let condition:any;
+          let condition;
           switch (weatherCondition) {
             case 0:
               condition = 'Clear sky';
@@ -266,18 +284,18 @@ export const useMapStore = defineStore('map', () => {
               condition = 'Thunderstorm';
               break;
             default:
-              condition = 'Unknown';
+              condition = ' Unknown';
           }
-          return weather.current_weather.temperature + weather.current_weather_units.temperature + condition
+          return weather.current_weather.temperature + weather.current_weather_units.temperature + ' ' + condition
         }
-      });
+      })
     } catch (error) {
-      console.error(error)
+      return "Weather not found!"
     }
   }
 
-  const getLocation = async (lat: number, long: number) => {
-    const locationAPI = `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${long}&format=json`;
+  const getLocation = async (lat: number, long: number) => {  
+    const locationAPI = `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${long}&format=json`           
     try {
       return await fetch(locationAPI).then(async (response) => {
         const location = await response.json()
@@ -287,13 +305,12 @@ export const useMapStore = defineStore('map', () => {
       });
     }
     catch (error) {
-      console.error(error)
+      return "Place not found."
     }
   }
 
-
   const _generateFakeData = async (length: number) => {
-
+    const waypoints: L.LatLng[] = [];
     coordinates.value.splice(0, length); //for faker only remove first 10 items
     for (let i = 0; i < length; i++) {
       //cebu city coordinates 
@@ -321,22 +338,57 @@ export const useMapStore = defineStore('map', () => {
       const weather = await getWeather(latitude, longitude)
       const location = await getLocation(latitude, longitude)
 
-      L.marker([latitude, longitude], { icon: avatar }).addTo(map.value as L.Map)
-        .bindPopup(weather + '<br>' + location + '<br>' )
-      coordinates.value.push( {latitude:latitude, longitude:longitude})
+
+      const payload: Location = {
+        channel_uuid: appStore.thisChannel.uuid,
+        user_uuid: faker.string.uuid(),
+        latitude: latitude,
+        longitude: longitude,
+        weather: weather,
+      }
+      // await locationStore.addLocation(payload).then((response) =>{
+      //   console.log("@___response", response)
+      //   thisCoordinates.value = {user_uuid: appStore.user.uuid, latitude:latitude, longitude: longitude}
+      //   coordinates.value = [{user_uuid: appStore.user.uuid, latitude:latitude, longitude: longitude}, ...coordinates.value];
+      //   // coordinates.value.push({user_uuid: appStore.user.uuid, latitude:latitude, longitude: longitude})
+      //   isLoading.value = false
+      // })
+      // map.value?.setView([latitude, longitude], zoom.value)
+      // L.marker([latitude, longitude], { icon: avatar }).addTo(map.value as L.Map)
+      //   .bindPopup(weather + '<br>' + location + '<br>' )
+
+      coordinates.value.push({ user_uuid: faker.string.uuid(),latitude:latitude, longitude:longitude} as Coordinates)
     }
   }
 
-
-  const setCoordinates = async(payload:Coordinates[]) =>{
-    coordinates.value = payload.map(({ user_uuid, latitude, longitude }) => ({
+  const setCoordinatesState = async(payload:Coordinates[]) =>{
+    coordinates.value = payload.map(({ channel_uuid, user_uuid, latitude, longitude }) => ({
+      channel_uuid,
       user_uuid,
       latitude,
       longitude
     })) as Coordinates[]
-
   }
 
+  const synchronizeCoordinates = (payload: Coordinates) => {
+    const { latitude, longitude, user_uuid } = payload
+
+    if (latitude && longitude) {
+      coordinates.value.push(payload as Coordinates)
+      return
+    }
+
+    const idx = coordinates.value.findIndex(coord => coord.user_uuid === user_uuid)
+    if (idx === -1) return
+  
+    const markerIndex = markers.value.findIndex(marker => marker.user_uuid === user_uuid)
+    if (markerIndex !== -1) {
+      markers.value[markerIndex].marker?.remove()
+      markers.value.splice(markerIndex, 1)
+    }
+  
+    coordinates.value.splice(idx, 1)
+  }
 
   return {
     routingControl,
@@ -347,9 +399,12 @@ export const useMapStore = defineStore('map', () => {
     isLoading,
     weather,
     location,
-    map,
+    isMapLoading,
+    markers,
+    sendLocationButtonLabel,
     getLocation,
     _generateFakeData,
-    setCoordinates
+    setCoordinatesState,
+    synchronizeCoordinates
   };
 });

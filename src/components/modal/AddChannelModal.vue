@@ -37,26 +37,26 @@
 </template>
 
 <script setup lang="ts">
-    import { ref, computed, onMounted, watch } from 'vue';
-    import { CHANNEL_TYPE, type User, type Channel } from '../../stores/types';
-    import { useSeesionStore } from '@/stores/session';
+    import { ref, computed, onMounted, watch } from 'vue'
+    import { CHANNEL_TYPE, type User, type Channel } from '../../stores/types'
+    import { useSeesionStore } from '@/stores/session'
 
     const sessionStore = useSeesionStore()
 
     // Props from parent
     const props = defineProps<{
-        isOpen: boolean;
-        friends: User[];
-        initialChannel: Channel | null;
-    }>();
+        isOpen: boolean
+        friends: User[]
+        initialChannel: Channel | null
+    }>()
 
     // Emit events to parent
-    const emit = defineEmits(['close', 'add-channel', 'delete-channel']);
+    const emit = defineEmits(['close', 'add-channel', 'delete-channel'])
 
     const initialChannel = ref({} as Channel)
 
     // Check if editing mode or creating a new channel
-    const isEditMode = computed(() => !!initialChannel.value.uuid);
+    const isEditMode = computed(() => !!initialChannel.value.uuid)
 
     // Initialize channel state based on whether it's a new or existing channel
     const channel = ref<Channel>(
@@ -69,7 +69,7 @@
                 type: CHANNEL_TYPE.GROUP,
                 created_on: new Date().toISOString(),
             }
-    );
+    )
 
     watch(() => props.isOpen, (value, _) => {
         console.log('@_____ SHOW CHANNEL MODAL', props)
@@ -92,30 +92,27 @@
         const user = sessionStore.session?.user
         if (user) {
             if (!channel.value.user_uuids.includes(user?.uuid)) {
-                channel.value.user_uuids.push(user?.uuid);
+                channel.value.user_uuids.push(user?.uuid)
             }
         }
-        if (!channel.value.user_uuids) return;
-        channel.value.type =
-            channel.value.user_uuids?.length === 1
-                ? CHANNEL_TYPE.DIRECT_MESSAGE
-                : CHANNEL_TYPE.GROUP;
-        emit('add-channel', { ...channel.value });
-        closeModal();
-    };
+        if (!channel.value.user_uuids) return
+        channel.value.type = CHANNEL_TYPE.GROUP
+        emit('add-channel', { ...channel.value })
+        closeModal()
+    }
 
     // Handle deleting channel
     const handleDelete = () => {
         if (confirm('Are you sure you want to delete this channel?')) {
-            emit('delete-channel', channel.value.uuid);
-            closeModal();
+            emit('delete-channel', channel.value.uuid)
+            closeModal()
         }
-    };
+    }
 
     // Close modal
     const closeModal = () => {
-        emit('close');
-    };
+        emit('close')
+    }
 </script>
 
 <style scoped>

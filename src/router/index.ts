@@ -13,13 +13,13 @@ const router = createRouter({
       component: () => import('../components/form/LoginForm.vue'), // LOGIN PAGE
     },
     {
-      path: '/', //login user UUID
+      path: '/:uuid', //login user UUID
       name: 'home',
       component: () => import('../components/view/MainView.vue'),
       props: true,
       children: [
         // {
-        //   path: '',
+        //   path: '/:uuid',
         //   name: 'sidebar',
         //   component: () => import('../components/SidePanel.vue'),
         //   props: true,
@@ -36,6 +36,12 @@ const router = createRouter({
           component: Map,
           props: true,
         },
+        {
+          path: 'user',
+          name: 'user-detail',
+          props: true,
+          component: () => import('../components/form/UserForm.vue')
+        }
       ],
     },
     {
@@ -50,7 +56,7 @@ router.beforeEach(async (to, from, next) => {
   const sessionStore = useSeesionStore()
   const _session = sessionStore.getSession() as Session
 
-  const restrictedPages = ['home', 'map', 'chat']
+  const restrictedPages = ['home', 'map', 'chat', 'sidebar', 'user-detail']
 
   // If no session and trying to access restricted pages or login/register page
   if (!_session) {

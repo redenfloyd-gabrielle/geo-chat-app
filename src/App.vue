@@ -14,7 +14,13 @@
 
   onMounted(() => {
     appStore.initializeApiInstance()
-    // sessionStore.getSession()
+    const _session = sessionStore.getSession()
+
+    if (_session) {
+      sessionStore.session = _session
+    }
+
+    wsStore.connect()
 
     // appStore._generateFriends(5)
 
