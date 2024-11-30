@@ -1,10 +1,12 @@
 <template>
-  <Modal/>
+  <Modal />
   <div :key="appStore.thisChannel.uuid" class="chat-container">
     <div class="btn-container">
-      <button class="btn btn-secondary" @click="mapStore.checkPermission"> {{ mapStore.isMapLoading? ' Please Wait...' :  'Share Location' }}   </button> 
-      <button class="btn btn-secondary go-back-btn"
-        @click="router.push({ name: 'home', params: { uuid: userStore.thisUser.uuid } })">Go Back </button>
+      <button class="btn btn-secondary" @click="mapStore.checkPermission"> {{ mapStore.isMapLoading ? ' Please Wait...' :
+        'Share Location' }} </button>
+      <button class="btn btn-secondary go-back-btn" @click="clickGoBackBtn">Go Back </button>
+      <!-- <button class="btn btn-secondary go-back-btn"
+        @click="router.push({ name: 'home', params: { uuid: userStore.thisUser.uuid } })">Go Back </button> -->
     </div>
     <div v-if="channel.type === CHANNEL_TYPE.GROUP" class="channel-header">
       <h2>{{ channel.name }}</h2>
@@ -43,14 +45,14 @@
   import StarterKit from '@tiptap/starter-kit'
   import Mention from '@tiptap/extension-mention'
   import Image from '@tiptap/extension-image'
-  import { CHANNEL_TYPE, type Channel, type Message } from '../stores/types'
+  import { CHANNEL_TYPE, type Channel, type Friend, type Message, type User } from '../stores/types'
   import { useAppStore } from '../stores/app'
   import { useUserStore } from '../stores/user'
   import { useRouter } from 'vue-router'
   import { useWsStore } from '@/stores/ws'
   import { useHelperStore } from '@/stores/helper'
   import { useMapStore } from '@/stores/map'
-  import Modal from './Modal.vue';
+  import Modal from './Modal.vue'
 
   // Variable Declaration
   const appStore = useAppStore()
@@ -214,6 +216,11 @@
       return friend.fullname
     }
   })
+
+  const clickGoBackBtn = () => {
+    appStore.setChannel({} as Channel)
+    appStore.setFriend({} as User)
+  }
 
   // Vue lifecycle
 
