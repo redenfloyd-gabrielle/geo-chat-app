@@ -54,6 +54,10 @@ export const useAppStore = defineStore('app', () => {
 
   // Computed Functions
 
+  const getUserImage = computed(() => (uuid?: string) => {
+    return friends.value.find(f => f.uuid === uuid)?.image_url ?? '/get-chat-circle-logo.png'
+  })
+
   const getUserFullname = computed(() => (uuid: string) => {
     return friends.value.find(f => f.uuid === uuid)?.fullname
   })
@@ -410,6 +414,7 @@ export const useAppStore = defineStore('app', () => {
     users,
     thisFriend,
     groupChannels,
+    getUserImage,
     initializeApiInstance,
     addInstanceHeader,
     handleApiRequest,

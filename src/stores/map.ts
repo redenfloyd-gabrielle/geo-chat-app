@@ -159,8 +159,8 @@ export const useMapStore = defineStore('map', () => {
           </div>
         </div>
         <div class="is-flex justify-content-center flex-direction-column align-items-center">
-          <img class="p-1 img-avatar" src="${appStore.user.image_url ?? '/get-chat-circle-logo.png'}" alt="Avatar">
-          <h1 class="img-avatar-name"> ${content[1]}</h1>
+          <img class="p-1 img-avatar" src="${appStore.getUserImage(marker.user_uuid)}" alt="Avatar">
+          <h1 class="img-avatar-name"> ${content[1]} </h1>
         </div>
         <div>
          <h3>Address</h3>
@@ -184,7 +184,7 @@ export const useMapStore = defineStore('map', () => {
       className: 'custom-div-icon',
       html:
         `<div class='marker-pin-green'> 
-        <img class="pin-avatar" src="${appStore.user.image_url ?? '/get-chat-circle-logo.png'}" alt="Avatar">   
+        <img class="pin-avatar" src="${appStore.getUserImage(marker?.user_uuid)}" alt="Avatar">   
         </div>  
         `,
       iconSize: [30, 42],
