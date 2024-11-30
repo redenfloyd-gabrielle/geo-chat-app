@@ -56,7 +56,7 @@
 
 <script setup lang="ts">
     import { ref, watch, computed, onMounted } from 'vue'
-    import type { User } from '../../stores/types' // Adjust path to your User interface
+    import type { Channel, User } from '../../stores/types' // Adjust path to your User interface
     import { useRoute, useRouter } from 'vue-router'
     import { useAppStore } from '../../stores/app'
     import { useUserStore } from '@/stores/user'
@@ -128,6 +128,8 @@
             router.push('/')
         }
         else {
+            appStore.setChannel({} as Channel)
+            appStore.setFriend({} as User)
             router.push({ name: 'home' })
         }
     }

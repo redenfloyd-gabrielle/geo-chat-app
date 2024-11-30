@@ -77,24 +77,24 @@ export const useFriendshipStore = defineStore('friendship', () => {
   }
 
 
-  const deleteFriend = async (payload: Message) => {
-    const _message = friendships.value.find((message) => message.uuid === payload.uuid)
-    if (!_message) {
-      console.error(`@___ Message not found with uuid: ${payload.uuid}`)
+  const deleteFriend = async (payload: Friend) => {
+    const _friendship = friendships.value.find((frienships) => frienships.uuid === payload.uuid)
+    if (!_friendship) {
+      console.error(`@___ frienships not found with uuid: ${payload.uuid}`)
       return undefined
     }
 
     try {
-      const response = await appStore.handleApiRequest(appStore.api.delete(`v1/frienships/${payload.uuid}`))
+      const response = await appStore.handleApiRequest(appStore.api.delete(`v1/friendships/${payload.uuid}`))
       if ('error' in response) {
-        console.error(`@___ Error on deleting message :: ${response.error}`)
+        console.error(`@___ Error on deleting frienships :: ${response.error}`)
         return undefined
       }
 
-      console.log(`@___ Deleted message successfully ::`, response.data)
-      return response.data as Message
+      console.log(`@___ Deleted frienships successfully ::`, response.data)
+      return response.data as Friend
     } catch (error) {
-      console.error(`@___ Unexpected error on updating message :: ${error}`)
+      console.error(`@___ Unexpected error on updating frienships :: ${error}`)
       return undefined
     }
   }

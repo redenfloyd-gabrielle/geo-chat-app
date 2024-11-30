@@ -38,7 +38,7 @@
   }>()
 
   // Emit events
-  const emit = defineEmits(['close', 'friend-added'])
+  const emit = defineEmits(['close', 'friend-added', 'unfriended'])
 
   const friendEmail = ref()
   const isEditMode = computed(() => !!props.friend.uuid)
@@ -52,7 +52,12 @@
   // Handle adding a friend
   const handleAddFriend = () => {
     if (friendEmail.value) {
-      emit('friend-added', friendEmail.value) // Send the friend's email to parent component
+      if (!isEditMode.value) {
+        emit('friend-added', friendEmail.value) // Send the friend's email to parent component
+      }
+      else {
+        emit('unfriended', friendEmail.value) // Send the friend's email to parent component
+      }
       friendEmail.value = '' // Clear input
       closeModal()
     }
