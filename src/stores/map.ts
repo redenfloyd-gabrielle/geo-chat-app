@@ -46,19 +46,19 @@ export const useMapStore = defineStore('map', () => {
 
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '&copy; OpenStreetMap contributors',}).addTo(map.value as L.Map);
 
-  const sendLocatonControl = L.Control.extend({
-    onAdd: function () {
-      sendLocationButtonElement = L.DomUtil.create('button', 'primary-btn');
-      sendLocationButtonElement.innerHTML = sendLocationButtonLabel.value;
-      sendLocationButtonElement.onclick = async () => {
-        isLoading.value = true;
-      };
-      return sendLocationButtonElement;
-    },
-  })
+    const sendLocatonControl = L.Control.extend({
+      onAdd: () =>  {
+        sendLocationButtonElement = L.DomUtil.create('button', 'primary-btn');
+        sendLocationButtonElement.innerHTML = sendLocationButtonLabel.value;
+        sendLocationButtonElement.onclick = async () => {
+          isLoading.value = true;
+        };
+        return sendLocationButtonElement;
+      },
+    })
 
     const goBackControl = L.Control.extend({
-      onAdd: function () {
+      onAdd: () => {
         const button = L.DomUtil.create('button', 'new-action-btn');
         button.innerHTML = 'Go Back';
         button.onclick = async () => {
@@ -120,14 +120,17 @@ export const useMapStore = defineStore('map', () => {
   
   watch(coordinates, (coordinates) => {
     coordinates.filter(coordinate => !markers.value.some(mark => mark.user_uuid === coordinate.user_uuid)).map((coordinate)=>{
-      
-      const avatar = L.icon({
-        iconUrl: '/src/assets/pin-red.png',
-        iconSize: [80, 80],
-        iconAnchor: [40, 65],
-        popupAnchor: [0, -50],
-        className: 'map-avatar'
-      })
+
+      const avatar = L.divIcon({
+        className: 'custom-div-icon',
+          html: 
+          `<div class='marker-pin-red'>  
+          </div>  
+          `,
+          iconSize: [30, 42],
+          iconAnchor: [15, 42],
+          popupAnchor: [0, -35],
+        })
      
       const marker = L.marker([coordinate.latitude, coordinate.longitude],).addTo(map.value as L.Map)
       marker.setIcon(avatar)
@@ -156,7 +159,7 @@ export const useMapStore = defineStore('map', () => {
           </div>
         </div>
         <div class="is-flex justify-content-center flex-direction-column align-items-center">
-          <img class="p-1 img-avatar" src="${faker.image.avatar()}" alt="Avatar">
+          <img class="p-1 img-avatar" src="${ appStore.user.image_url ?? faker.image.avatar()}" alt="Avatar">
           <h1 class="img-avatar-name"> ${content[1]}</h1>
         </div>
         <div>
@@ -170,22 +173,31 @@ export const useMapStore = defineStore('map', () => {
       </div>
     `)     
     if(marker.user_uuid == appStore.user.uuid) marker.marker?.openPopup()
-    const avatar = L.icon({
-      iconUrl: '/src/assets/pin-green.png',
-      iconSize: [80, 80],
-      iconAnchor: [40, 65],
-      popupAnchor: [0, -50],
-      className: 'map-avatar'
-    })
+    // const avatar = L.icon({
+    //   iconUrl:  '/src/assets/pin-green1.png',
+    //   iconSize: [80, 80],
+    //   iconAnchor: [40, 65],
+    //   popupAnchor: [0, -50],
+    //   className: 'pin'
+    // })
+    const avatar = L.divIcon({
+      className: 'custom-div-icon',
+        html: 
+        `<div class='marker-pin-green'> 
+        <img class="pin-avatar" src="${appStore.user.image_url ?? faker.image.avatar()}" alt="Avatar">   
+        </div>  
+        `,
+        iconSize: [30, 42],
+        iconAnchor: [15, 42],
+        popupAnchor: [0, -35],
+      })
     marker.marker?.setIcon(avatar)
   }
 
   const getCurrentPosition = () : Promise<{ latitude: number; longitude: number }>=> {
-    isMapLoading.value= true 
     return new Promise((resolve, reject) => {
       navigator.geolocation.getCurrentPosition(
         position => {
-          isMapLoading.value = false
           resolve(position.coords)
         },
         error => {
@@ -199,63 +211,25 @@ export const useMapStore = defineStore('map', () => {
 
   const sendMyLocation =  async() => {
     
-    await getCurrentPosition().then(async ({ latitude, longitude } ) => {
-      
-      weather.value = await getWeather(latitude, longitude) as string
-      location.value = await getLocation(latitude, longitude) as string
-      
-      const payload: Location = {
-        channel_uuid: appStore.thisChannel.uuid,
-        user_uuid: appStore.user.uuid,
-        latitude: latitude,
-        longitude: longitude,
-        weather: weather.value,
+    const { latitude, longitude } = await getCurrentPosition()
+
+    weather.value = await getWeather(latitude, longitude) as string
+    location.value = await getLocation(latitude, longitude) as string
+    
+    const payload: Location = {
+      channel_uuid: appStore.thisChannel.uuid,
+      user_uuid: appStore.user.uuid,
+      latitude: latitude,
+      longitude: longitude,
+      weather: weather.value,
+    }
+
+    await locationStore.addLocation(payload).then((response) =>{
+      if(response){
+        thisCoordinates.value = {user_uuid: appStore.user.uuid, channel_uuid: appStore.thisChannel.uuid, latitude:latitude, longitude: longitude}
+        isLoading.value = false 
       }
-
-      await locationStore.addLocation(payload).then((response) =>{
-        if(response){
-          thisCoordinates.value = {user_uuid: appStore.user.uuid, channel_uuid: appStore.thisChannel.uuid, latitude:latitude, longitude: longitude}
-          isLoading.value = false 
-        }
-      })
-  })
-
-
-
-
-    // if (navigator.geolocation) {
-    //   navigator.geolocation.getCurrentPosition(async (position) => {
-
-    //     console.log("POSITION::",position)
-    //     const latitude = position.coords.latitude
-    //     const longitude = position.coords.longitude
-
-    //     try {
-    //       weather.value = await getWeather(latitude, longitude) as string
-    //       location.value = await getLocation(latitude, longitude) as string
-          
-    //       const payload: Location = {
-    //         channel_uuid: appStore.thisChannel.uuid,
-    //         user_uuid: appStore.user.uuid,
-    //         latitude: latitude,
-    //         longitude: longitude,
-    //         weather: weather.value,
-    //       }
-          
-    //       await locationStore.addLocation(payload).then((response) =>{
-    //         if(response){
-    //           thisCoordinates.value = {user_uuid: appStore.user.uuid, channel_uuid: appStore.thisChannel.uuid, latitude:latitude, longitude: longitude}
-    //           isLoading.value = false 
-    //         }
-    //       })
-    //     } catch (error) {
-    //       console.error("Error fetching data:", error)
-    //     }},
-    //     (err) => {
-    //       console.log("Unable to retrieve your location. Error:", err.message)
-    //     }
-    //   )
-    // }
+    })
   }
 
   const removeMyLocation = async() =>{
@@ -434,35 +408,12 @@ export const useMapStore = defineStore('map', () => {
     coordinates.value.splice(idx, 1)
   }
 
-  const checkPermision = async () => {
-    // getCurrentPosition
-    // router.push({ name: 'map' })
-      await getCurrentPosition().then(() => router.push({ name: 'map' }) )
-    // if (!navigator.geolocation) {
-    //     console.log("Geolocation is not supported by this browser.")
-    //     return false;
-    // }
-    // navigator.permissions.query({ name: 'geolocation' }).then((status)  => {
-    //   if(status.state === LOCATION_PERMISSION.GRANTED){
-    //     router.push({ name: 'map' })
-    //     isLocationInActive.value = false
-    //   }else {
-    //     isLocationInActive.value = true
-    //   }
-    // })
-    // .catch((error)  =>{
-    //     console.error("Error:::", error)
-    // })
-    // navigator.geolocation.getCurrentPosition(async (position) => {
-    //   // if(!position) return
-    //   if(position){
-    //     router.push({ name: 'map' })
-    //     isLocationInActive.value = false
-
-    //   }else{
-    //     isLocationInActive.value = true
-    //   }
-    // })
+  const checkPermission = async () => {
+    isMapLoading.value= true 
+    await getCurrentPosition().then(() =>{
+      isMapLoading.value = false 
+      router.push({ name: 'map' })    
+    })
   }
 
 
@@ -484,6 +435,6 @@ export const useMapStore = defineStore('map', () => {
     _generateFakeData,
     setCoordinatesState,
     synchronizeCoordinates,
-    checkPermision
+    checkPermission
   };
 });

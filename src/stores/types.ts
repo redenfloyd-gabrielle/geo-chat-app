@@ -103,3 +103,8 @@ export interface WebsocketMessage {
   event: WS_EVENT,
   data: Message | Coordinates
 }
+
+export interface Coords {
+  latitude: number,
+  longitude: number
+}

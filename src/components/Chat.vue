@@ -1,7 +1,8 @@
 <template>
-  <div class="chat-container">
+  <Modal/>
+  <div :key="appStore.thisChannel.uuid" class="chat-container">
     <div class="btn-container">
-      <button class="btn btn-secondary" @click="mapStore.checkPermision"> {{ mapStore.isMapLoading? ' Please Wait...' :  'Share Location' }}   </button> 
+      <button class="btn btn-secondary" @click="mapStore.checkPermission"> {{ mapStore.isMapLoading? ' Please Wait...' :  'Share Location' }}   </button> 
       <button class="btn btn-secondary go-back-btn"
         @click="router.push({ name: 'home', params: { uuid: userStore.thisUser.uuid } })">Go Back </button>
     </div>
@@ -33,7 +34,6 @@
       <button @click="sendMessage" class="send-button">Send</button>
     </div>
   </div>
-  <Modal :is-location-in-active="mapStore.isLocationInActive" @click-close-btn="mapStore.isLocationInActive = false; mapStore.isMapLoading = false"/>
 </template>
 
 

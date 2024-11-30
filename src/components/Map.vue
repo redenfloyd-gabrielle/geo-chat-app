@@ -1,6 +1,6 @@
 <template>
   <div class="map-container">
-    <Modal :is-loading="mapStore.isLoading" @click-cancel-btn="mapStore.isLoading = false" />
+    <Modal/>
     <div :class="{'loading-screen':mapStore.isLoading || mapStore.isMarkerLoading}" id="map"></div>
   </div>
 </template>

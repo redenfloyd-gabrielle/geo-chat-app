@@ -39,7 +39,8 @@ export const useSeesionStore = defineStore('session', () => {
             const _user = response as any
             console.log('@___ Login successful! ')
             userStore.selecteUser = _user.user as User
-            userStore.thisUser = { ...userStore.selecteUser } as User
+            userStore.thisUser = _user.user as User
+            appStore.user =  _user.user as User
             appStore.addInstanceHeader('Authorization', `Bearer ${_user.token as string}`)
             saveSession({ user: { ...userStore.selecteUser } as User, token: _user.token as string } as Session)
             return LOGIN_STATUS.SUCCESS
