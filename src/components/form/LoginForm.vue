@@ -1,24 +1,31 @@
 <template>
-  <div class="login-form">
-    <h2>Login</h2>
-    <form @submit.prevent="handleLogin">
-      <div class="form-group">
-        <label for="email">Username</label>
-        <input class="input-text-modal" id="username" v-model="username" placeholder="Enter your email" required />
-      </div>
+  <div  class="login-container ">
+    <div class="mt-5 is-flex flex-direction-column justify-content-center align-items-center">
+      <img class="logo" src="/public/geo-chat-orig-logo-removebg-preview.png" alt="">
+    <div class="login-form">
+      <h2>Login</h2>
+      <form @submit.prevent="handleLogin">
+        <div class="form-group">
+          <label for="email">Username</label>
+          <input class="input-text-modal" id="username" v-model="username" placeholder="Enter your email" required />
+        </div>
 
-      <div class="form-group">
-        <label for="password">Password</label>
-        <input class="input-text-modal" id="password" type="password" v-model="password"
-          placeholder="Enter your password" required />
-      </div>
+        <div class="form-group">
+          <label for="password">Password</label>
+          <input class="input-text-modal" id="password" type="password" v-model="password"
+            placeholder="Enter your password" required />
+        </div>
 
-      <div class="form-actions">
-        <button type="submit" class="btn btn-primary">Login</button>
-        <button type="button" class="btn btn-secondary" @click="goToSignup">Signup</button>
-      </div>
-    </form>
+        <div class="form-actions">
+          <button type="submit" class="btn btn-primary">Login</button>
+          <button type="button" class="btn btn-secondary" @click="goToSignup">Signup</button>
+        </div>
+      </form>
+    </div>
+    </div>
+
   </div>
+  
 </template>
 
 <script setup lang="ts">
