@@ -19,6 +19,7 @@
   onMounted(async() => {
     mapStore.mapInstance('map')
     await locationStore.getLocationsByChannel()
+    // mapStore._generateFakeData(20)
    
   })
 

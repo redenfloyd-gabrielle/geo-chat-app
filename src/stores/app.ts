@@ -54,7 +54,7 @@ export const useAppStore = defineStore('app', () => {
 
   // Computed Functions
 
-  const getUserImage = computed(() => (uuid?: string) => {
+  const getUserImage = computed(() => (uuid: string) => {
     return friends.value.find(f => f.uuid === uuid)?.image_url ?? '/get-chat-circle-logo.png'
   })
 
