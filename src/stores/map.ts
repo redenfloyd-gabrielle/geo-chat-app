@@ -148,7 +148,7 @@ export const useMapStore = defineStore('map', () => {
   const bindPopup = async (marker: _Marker) => {
     const content = await Promise.all([
       getWeather((marker.marker as any)._latlng.lat, (marker.marker as any)._latlng.lng),
-      appStore.getUserFullname(marker.user_uuid as string) ?? "Me",
+      marker.user_uuid === appStore.user.uuid? "Me" : appStore.getUserFullname(marker.user_uuid as string) ?? "Stranger",
       getLocation((marker.marker as any)._latlng.lat, (marker.marker as any)._latlng.lng)
     ])
     marker.marker?.bindPopup(`
