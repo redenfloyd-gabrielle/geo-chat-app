@@ -244,8 +244,8 @@ export const useAppStore = defineStore('app', () => {
   const logoutUser = async () => {
     sessionStore.deleteSession()
     user.value = {} as User
-    await router.push('/')
-    window.location.reload()
+    await router.push('/login')
+    // window.location.reload()
   }
 
   const clickUserBtn = () => {
