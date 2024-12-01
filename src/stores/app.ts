@@ -301,7 +301,7 @@ export const useAppStore = defineStore('app', () => {
 
       wsStore.joinChannel(value.uuid)
 
-      router.push({ name: 'chat', params: { uuid: value.uuid } })
+      router.push({ name: 'chat', params: { chat_uuid: value.uuid } })
     }
     else {
       router.push({ name: 'home', params: { uuid: user.value.uuid } })

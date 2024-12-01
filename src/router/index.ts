@@ -25,13 +25,13 @@ const router = createRouter({
         //   props: true,
         // },
         {
-          path: 'chat/:uuid',
+          path: 'chat/:chat_uuid',
           name: 'chat',
           component: Chat,
           props: true,
         },
         {
-          path: 'map/:uuid',
+          path: 'map',
           name: 'map',
           component: Map,
           props: true,
@@ -57,7 +57,7 @@ router.beforeEach(async (to, from, next) => {
   const _session = sessionStore.getSession() as Session
 
   const restrictedPages = ['home', 'map', 'chat', 'sidebar', 'user-detail']
-
+  console.log(`@___ routing from ${from.name as string} to ${to.name as string}`)
   // If no session and trying to access restricted pages or login/register page
   if (!_session) {
     if (to.name === 'login' || to.name === 'register') {

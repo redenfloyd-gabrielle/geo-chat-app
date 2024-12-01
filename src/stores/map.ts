@@ -63,7 +63,7 @@ export const useMapStore = defineStore('map', () => {
         const button = L.DomUtil.create('button', 'new-action-btn')
         button.innerHTML = 'Go Back'
         button.onclick = async () => {
-          router.push({ name: 'chat', params: { uuid: appStore.selectedChannel.uuid } })
+          router.push({ name: 'chat', params: { chat_uuid: appStore.selectedChannel.uuid } })
         }
         return button
       }
@@ -149,7 +149,7 @@ export const useMapStore = defineStore('map', () => {
   const bindPopup = async (marker: _Marker) => {
     const content = await Promise.all([
       getWeather((marker.marker as any)._latlng.lat, (marker.marker as any)._latlng.lng),
-      marker.user_uuid === appStore.user.uuid? "Me" : appStore.getUserFullname(marker.user_uuid as string) ?? "Stranger",
+      marker.user_uuid === appStore.user.uuid ? "Me" : appStore.getUserFullname(marker.user_uuid as string) ?? "Stranger",
       getLocation((marker.marker as any)._latlng.lat, (marker.marker as any)._latlng.lng)
     ])
     marker.marker?.bindPopup(`
@@ -160,7 +160,7 @@ export const useMapStore = defineStore('map', () => {
           </div>
         </div>
         <div class="is-flex justify-content-center flex-direction-column align-items-center">
-          <img class="p-1 img-avatar" src="${marker.user_uuid === appStore.user.uuid? appStore.user.image_url : appStore.getUserImage(marker.user_uuid as string)}" alt="Avatar">
+          <img class="p-1 img-avatar" src="${marker.user_uuid === appStore.user.uuid ? appStore.user.image_url : appStore.getUserImage(marker.user_uuid as string)}" alt="Avatar">
           <h1 class="img-avatar-name"> ${content[1]}  </h1>
         </div>
         <div>
@@ -185,7 +185,7 @@ export const useMapStore = defineStore('map', () => {
       className: 'custom-div-icon',
       html:
         `<div class='marker-pin-green'> 
-        <img class="pin-avatar" src="${ marker.user_uuid === appStore.user.uuid? appStore.user.image_url : appStore.getUserImage(marker.user_uuid as string)}" alt="Avatar">   
+        <img class="pin-avatar" src="${marker.user_uuid === appStore.user.uuid ? appStore.user.image_url : appStore.getUserImage(marker.user_uuid as string)}" alt="Avatar">   
         </div>  
         `,
       iconSize: [30, 42],
@@ -365,12 +365,12 @@ export const useMapStore = defineStore('map', () => {
         weather: weather,
       }
 
-    await locationStore.addLocation(payload).then((response) => {
-      if (response) {
-        // thisCoordinates.value = { user_uuid: appStore.user.uuid, channel_uuid: appStore.thisChannel.uuid, latitude: latitude, longitude: longitude }
-        // isLoading.value = false
-      }
-    })
+      await locationStore.addLocation(payload).then((response) => {
+        if (response) {
+          // thisCoordinates.value = { user_uuid: appStore.user.uuid, channel_uuid: appStore.thisChannel.uuid, latitude: latitude, longitude: longitude }
+          // isLoading.value = false
+        }
+      })
 
       coordinates.value.push({ user_uuid: faker.string.uuid(), latitude: latitude, longitude: longitude } as Coordinates)
     }
@@ -409,7 +409,7 @@ export const useMapStore = defineStore('map', () => {
     isMapLoading.value = true
     await getCurrentPosition().then(() => {
       isMapLoading.value = false
-      router.push({ name: 'map' })
+      router.push({ name: 'map', query: { view: 'map' } })
     })
   }
 

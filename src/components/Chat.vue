@@ -2,7 +2,8 @@
   <Modal />
   <div :key="appStore.thisChannel.uuid" class="chat-container">
     <div class="btn-container">
-      <button class="btn btn-secondary" @click="mapStore.checkPermission"> {{ mapStore.isMapLoading ? ' Please Wait...' :
+      <button class="btn btn-secondary" @click="mapStore.checkPermission"> {{ mapStore.isMapLoading ? ' Please Wait...'
+        :
         'Share Location' }} </button>
       <button class="btn btn-secondary go-back-btn" @click="clickGoBackBtn">Go Back </button>
       <!-- <button class="btn btn-secondary go-back-btn"
@@ -53,7 +54,12 @@
   import { useHelperStore } from '@/stores/helper'
   import { useMapStore } from '@/stores/map'
   import Modal from './Modal.vue'
-
+  defineProps({
+    chat_uuid: {
+      type: String,
+      required: true,
+    },
+  })
   // Variable Declaration
   const appStore = useAppStore()
   const router = useRouter()
