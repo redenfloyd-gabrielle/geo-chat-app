@@ -245,7 +245,10 @@ export const useAppStore = defineStore('app', () => {
     sessionStore.deleteSession()
     user.value = {} as User
     // await router.push('/login')
-    window.location.reload()
+    console.log('@__ window :: ', window, typeof window)
+    if (typeof window !== 'undefined') {
+      window.location.reload()
+    }
   }
 
   const clickUserBtn = () => {
