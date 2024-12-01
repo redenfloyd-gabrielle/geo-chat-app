@@ -19,6 +19,11 @@ export enum WS_EVENT {
   COORDINATES = 'coordinates'
 }
 
+export enum LOCATION_PERMISSION {
+  GRANTED = 'granted',
+  DENIED = 'denied',
+}
+
 export interface User {
   uuid: string,
   fullname: string,
@@ -97,4 +102,9 @@ export interface _Marker {
 export interface WebsocketMessage {
   event: WS_EVENT,
   data: Message | Coordinates
+}
+
+export interface Coords {
+  latitude: number,
+  longitude: number
 }

@@ -54,7 +54,7 @@
   <AddChannelModal :isOpen="showAddChannelModal" :initialChannel="appStore.thisChannel" :friends="appStore.friends"
     @close="showAddChannelModal = false" @add-channel="addChannel" />
   <AddFriendModal :isOpen="showAddFriendModal" :friend="appStore.thisFriend" @close="showAddFriendModal = false"
-    @friend-added="addFriend" />
+    @friend-added="addFriend" @unfriended="unfriended" />
 </template>
 
 <script setup lang="ts">
@@ -93,6 +93,36 @@
       await friendshipStore.addFriend(newFriendShip)
     }
     // Call backend API to add friend or update friends list
+  }
+
+  const unfriended = async (friendEmail: string) => {
+    const friendship = friendshipStore.friendships.find((friendship) => {
+      // Check if user1 or user2 in the friendship matches the friendEmail
+      if (friendship.user1_uuid === appStore.user.uuid && friendship.user2?.email === friendEmail) {
+        return true // Match found with user2
+      } else if (friendship.user2_uuid === appStore.user.uuid && friendship.user1?.email === friendEmail) {
+        return true // Match found with user1
+      }
+      return false // No match
+    })
+
+    if (!friendship) {
+      throw new Error(`No friendship found for email: ${friendEmail}`)
+    }
+
+    console.log('DELETE FRIENDSHIP ', friendship)
+    const _friend = await friendshipStore.deleteFriend(friendship)
+
+    if (_friend) {
+      const idx = friendshipStore.friendships.findIndex(f => f.uuid === _friend.uuid)
+      if (idx != 1) {
+        friendshipStore.friendships.splice(idx, 1)
+        appStore.setFriend({} as User)
+        appStore.setChannel({} as Channel)
+      }
+    }
+
+    return friendship // Return the found friendship
   }
 
   const editChannel = (channel: any) => {
