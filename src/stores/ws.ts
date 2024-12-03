@@ -1,7 +1,7 @@
 import { defineStore } from "pinia"
 import { computed, ref, watch } from "vue"
 import { io, Socket } from "socket.io-client"
-import { WS_EVENT, type Coordinates, type Message, type WebsocketMessage } from "./types"
+import { WS_EVENT, type Coordinates, type Friend, type Message, type WebsocketMessage } from "./types"
 import { useAppStore } from "./app"
 import { useMapStore } from "./map"
 import { useLocationStore } from "./location"
@@ -73,20 +73,29 @@ export const useWsStore = defineStore('ws', () => {
   }
 
   const messageListener = (message: WebsocketMessage) => {
-    
+
     const { event, data } = message
-    switch(event){
+    switch (event) {
 
       case WS_EVENT.MESSAGE:
         if (appStore.selectedChannel.uuid === data.channel_uuid) {
           appStore.selectedMessages.push(data as Message)
         }
-      break
+        break
       case WS_EVENT.COORDINATES:
         if (appStore.selectedChannel.uuid === data.channel_uuid) {
           mapStore.synchronizeCoordinates(data as Coordinates)
         }
-      break
+        break
+      case WS_EVENT.FRIEND_REQUEST:
+        appStore.updateFriendships(data as Friend)
+        break
+      case WS_EVENT.UPDATE_FRIENSHIP_STATUS:
+        appStore.updateFriendships(data as Friend)
+        break
+      case WS_EVENT.DELETE_FRIEND_REQUEST:
+        appStore.removeFriendship(data as Friend)
+        break
     }
 
   }

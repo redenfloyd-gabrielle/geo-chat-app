@@ -217,10 +217,10 @@
   )
 
   const friendName = computed(() => {
-    const friend = channel.value.users?.find(f => f.uuid !== appStore.user.uuid)
-    if (friend) {
-      return friend.fullname
-    }
+    // const friend = channel.value.users?.find(f => f.uuid !== appStore.user.uuid)
+    // if (friend) {
+    return appStore.selectedFriend.fullname
+    // }
   })
 
   const clickGoBackBtn = () => {
@@ -299,14 +299,29 @@
     flex-direction: column;
   }
 
+  /* .message-content {
+    background-color: #4c4c4c;
+    color: white;
+    padding: 10px;
+    border-radius: 10px;
+    font-size: 14px;
+    max-width: 40%;
+    word-wrap: break-word;
+  } */
+
   .message-content {
     background-color: #4c4c4c;
     color: white;
     padding: 10px;
     border-radius: 10px;
     font-size: 14px;
-    max-width: 70%;
+    /* max-width: 70%; */
+    width: fit-content;
+    /* Width adjusts to the content */
     word-wrap: break-word;
+    /* Ensures words wrap if they exceed max width */
+    white-space: pre-wrap;
+    /* Preserves line breaks and spaces */
   }
 
   .own-message {

@@ -46,6 +46,8 @@
     <!-- Logout Section -->
     <section class="logout-section">
       <button class="btn btn-seconday" @click="appStore.logoutUser">Logout</button>
+      <button v-if="appStore.friendshipRequestList.length" class="btn btn-primary"
+        @click="openFriendRequestModal">Friend Requests</button>
       <button class="btn btn-primary" @click="appStore.clickUserBtn">User</button>
     </section>
   </div>
@@ -55,6 +57,7 @@
     @close="showAddChannelModal = false" @add-channel="addChannel" />
   <AddFriendModal :isOpen="showAddFriendModal" :friend="appStore.thisFriend" @close="showAddFriendModal = false"
     @friend-added="addFriend" @unfriended="unfriended" />
+  <FriendshipStatusModal :isOpen="showFriendRequestList" @close="showFriendRequestList = false" />
 </template>
 
 <script setup lang="ts">
@@ -62,18 +65,22 @@
   import { useAppStore } from "../stores/app"
   import AddChannelModal from './modal/AddChannelModal.vue' // Adjust path as needed
   import AddFriendModal from "./modal/AddFriendModal.vue"
-  import type { Channel, Friend, User } from "../stores/types"
+  import FriendshipStatusModal from "./modal/FriendshipStatusModal.vue"
+  import { FRIENDSHIP_STATUS, WS_EVENT, type Channel, type Friend, type User, type WebsocketMessage } from "../stores/types"
   import { useSeesionStore } from "@/stores/session"
   import { useFriendshipStore } from "@/stores/friendship"
   import { useUserStore } from "@/stores/user"
   import router from "@/router"
+  import { useWsStore } from "@/stores/ws"
 
   const appStore = useAppStore()
   const sessionStore = useSeesionStore()
   const friendshipStore = useFriendshipStore()
   const userStore = useUserStore()
+  const wsStore = useWsStore()
   const showAddChannelModal = ref(false)
   const showAddFriendModal = ref(false)
+  const showFriendRequestList = ref(false)
 
   const addChannel = (channel: any) => {
     appStore.addChannel(channel)
@@ -82,15 +89,33 @@
   const addFriend = async (email: string) => {
     console.log('Friend email:', email)
 
+    const friendship = friendshipStore.friendships.find(f => f.user1?.email === email || f.user2?.email === email)
+
+    if (friendship) {
+      alert(`Friendship already exist, friendship status: ${friendship.status}`)
+      return
+    }
+
     const user1 = userStore.users.find(u => u.email === email)
     if (user1) {
       const newFriendShip = {} as Friend
 
-      newFriendShip.user1_uuid = user1.uuid
-      newFriendShip.user2_uuid = appStore.user.uuid
+      newFriendShip.user1_uuid = user1.uuid // Accept or Reject
+      newFriendShip.user2_uuid = appStore.user.uuid // Requesting
       newFriendShip.created_on = Date.now()
+      newFriendShip.status = FRIENDSHIP_STATUS.Pending
 
-      await friendshipStore.addFriend(newFriendShip)
+      const friendRequest = await friendshipStore.addFriend(newFriendShip)
+
+      if (friendRequest) {
+        const friendship = await friendshipStore.getFriendshipByUuid(friendRequest.uuid)
+        const wsMessage = {
+          event: WS_EVENT.FRIEND_REQUEST,
+          data: friendship
+        } as WebsocketMessage
+
+        wsStore.sendMessage(wsMessage)
+      }
     }
     // Call backend API to add friend or update friends list
   }
@@ -120,9 +145,20 @@
         appStore.setFriend({} as User)
         appStore.setChannel({} as Channel)
       }
+
+      const wsMessage = {
+        event: WS_EVENT.DELETE_FRIEND_REQUEST,
+        data: _friend
+      } as WebsocketMessage
+
+      wsStore.sendMessage(wsMessage)
     }
 
     return friendship // Return the found friendship
+  }
+
+  const openFriendRequestModal = () => {
+    showFriendRequestList.value = true
   }
 
   const editChannel = (channel: any) => {

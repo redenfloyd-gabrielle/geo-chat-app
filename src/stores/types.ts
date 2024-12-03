@@ -16,7 +16,16 @@ export enum HTTP_RESPONSE_STATUS {
 
 export enum WS_EVENT {
   MESSAGE = 'message',
-  COORDINATES = 'coordinates'
+  COORDINATES = 'coordinates',
+  FRIEND_REQUEST = 'friend request',
+  DELETE_FRIEND_REQUEST = 'delete friend request',
+  UPDATE_FRIENSHIP_STATUS = 'update friendship status'
+}
+
+export enum FRIENDSHIP_STATUS {
+  Pending = "Pending",
+  Accepted = "Accepted",
+  Blocked = "Blocked"
 }
 
 export enum LOCATION_PERMISSION {
@@ -76,7 +85,8 @@ export interface Friend {
   user2_uuid: string  // UUID of the second user
   created_on: number  // Timestamp when they became friends
   user1?: User,
-  user2?: User
+  user2?: User,
+  status?: string,
 }
 
 export interface Session {
@@ -101,7 +111,7 @@ export interface _Marker {
 
 export interface WebsocketMessage {
   event: WS_EVENT,
-  data: Message | Coordinates
+  data: any //Message | Coordinates | Friend
 }
 
 export interface Coords {

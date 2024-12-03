@@ -1,7 +1,7 @@
 import { defineStore } from "pinia"
 import { computed, ref, watch } from "vue"
 import type { Message, User, Channel, Session, Coordinates, _Marker, WebsocketMessage, Friend } from "./types"
-import { CHANNEL_TYPE, HTTP_RESPONSE_STATUS, LOGIN_STATUS, WS_EVENT } from "./types"
+import { CHANNEL_TYPE, FRIENDSHIP_STATUS, HTTP_RESPONSE_STATUS, LOGIN_STATUS, WS_EVENT } from "./types"
 import { faker } from "@faker-js/faker"
 import { useSecureStore } from "./secure"
 import { useRouter } from "vue-router"
@@ -65,6 +65,7 @@ export const useAppStore = defineStore('app', () => {
   const friends = computed(() => {
     // Extract full User objects from friendships involving the current user
     const friends = friendshipStore.friendships
+      .filter(f => f.status === FRIENDSHIP_STATUS.Accepted)
       .map((friendship) => {
         if (friendship.user1_uuid === user.value.uuid) {
           return friendship.user2 // Return user2 object
@@ -81,6 +82,10 @@ export const useAppStore = defineStore('app', () => {
     )
 
     return uniqueFriends
+  })
+
+  const friendshipRequestList = computed(() => {
+    return friendshipStore.friendships.filter(f => f.status == FRIENDSHIP_STATUS.Pending) ?? [] as Friend[]
   })
 
   const groupChannels = computed(() => {
@@ -263,6 +268,27 @@ export const useAppStore = defineStore('app', () => {
     router.push({ name: 'chat' })
   }
 
+  const updateFriendships = (payload: Friend) => {
+    console.log('@@____ Update Friendship Request :: ', payload)
+    const idx = friendshipStore.friendships.findIndex(f => f.user1_uuid === user.value.uuid || f.user2_uuid === user.value.uuid)
+    if (idx != -1) {
+      friendshipStore.friendships[idx] = payload
+    }
+    else {
+      friendshipStore.friendships.push(payload)
+    }
+    if (payload.user2_uuid === user.value.uuid || payload.user1_uuid === user.value.uuid) {
+
+    }
+  }
+
+  const removeFriendship = (payload: Friend) => {
+    const idx = friendshipStore.friendships.findIndex(f => f.user1_uuid === user.value.uuid || f.user2_uuid === user.value.uuid)
+    if (idx != -1) {
+      friendshipStore.friendships.splice(idx, 1)
+    }
+  }
+
 
   // Watchers
   // Scroll to the bottom whenever messages change
@@ -272,19 +298,6 @@ export const useAppStore = defineStore('app', () => {
       decryptMessages.value[i] = res
     })
   })
-
-  // appStore._generateFriends(5)
-
-  // wsStore.connect()
-  // wsStore.joinChannel('test')
-  // appStore._generateChannels(5)
-  // appStore._generateMessage(20)
-  // appStore.setRandomUser()
-  // setTimeout(() => {
-  //   console.log('appStore.channels[0', appStore.channels[0])
-  //   const channel = appStore.channels[0]
-  //   appStore.setChannel(channel)
-  // }, 500);
 
   watch(selectedChannel, async (value, _) => {
     if (_.uuid) {
@@ -418,6 +431,7 @@ export const useAppStore = defineStore('app', () => {
     thisFriend,
     groupChannels,
     getUserImage,
+    friendshipRequestList,
     initializeApiInstance,
     addInstanceHeader,
     handleApiRequest,
@@ -436,6 +450,8 @@ export const useAppStore = defineStore('app', () => {
     _generateFriends,
     _generateChannels,
     _generateMessage,
-    clickUserBtn
+    clickUserBtn,
+    updateFriendships,
+    removeFriendship
   }
 })

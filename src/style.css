@@ -80,10 +80,10 @@ footer {
   /* box-shadow: rgba(0, 0, 0, 0.247) 0px 5px 15px; */
   /* display: inline-block; */
 }
-.tooltip-container{
-  width: 250px; 
+.tooltip-container {
+  width: 250px;
 }
-.tooltip-weather{
+.tooltip-weather {
   border-radius: 5px;
   padding: 10px;
   background-color: #007bff;
@@ -91,21 +91,21 @@ footer {
   color: whitesmoke;
   font-size: 12px;
 }
-.tooltip-address{
-  color: #686D76;
+.tooltip-address {
+  color: #686d76;
   font-size: 12px;
 }
-.img-avatar{
-  width: 100px; 
+.img-avatar {
+  width: 100px;
   height: 100px;
   border-radius: 50%;
 }
-.img-avatar-name{
+.img-avatar-name {
   font-size: 23px;
   text-transform: capitalize;
 }
 
-.map-button-container{
+.map-button-container {
   display: flex;
   flex-direction: column;
   gap: 1.5rem;
@@ -120,7 +120,6 @@ footer {
   border: 0;
   border-radius: 5px;
   cursor: pointer;
-
 }
 
 .new-action-btn {
@@ -139,7 +138,7 @@ footer {
   height: 100%;
   width: 100%;
 }
-.text-loading{
+.text-loading {
   font-size: 32px;
 }
 
@@ -147,8 +146,8 @@ footer {
   display: flex;
 }
 
-.is-flex-direction-row{
-  flex-direction: row
+.is-flex-direction-row {
+  flex-direction: row;
 }
 .justify-content-center {
   justify-content: center;
@@ -170,12 +169,12 @@ footer {
   align-items: center;
 }
 
-.align-content-space-between{
-  align-content: space-between
+.align-content-space-between {
+  align-content: space-between;
 }
 
-.justify-content-space-between{
-  justify-content: space-between
+.justify-content-space-between {
+  justify-content: space-between;
 }
 
 .w-100 {
@@ -216,10 +215,10 @@ footer {
   padding: 1rem;
 }
 
-.mr-1{
+.mr-1 {
   margin-right: 1em;
 }
-.mr-5{
+.mr-5 {
   margin-right: 5em;
 }
 
@@ -233,6 +232,15 @@ footer {
 .mt-6 {
   margin-top: 6em;
 }
+
+.mb-1 {
+  margin-bottom: 1em;
+}
+
+.flex-gap-1 {
+  gap: 1em;
+}
+
 .card {
   border-radius: 10px;
   z-index: 400;
@@ -287,12 +295,11 @@ li {
   display: none;
 }
 
-
 .marker-pin-red {
   width: 30px;
   height: 30px;
   border-radius: 50% 50% 50% 0;
-  background: #F23B3B;
+  background: #f23b3b;
   position: absolute;
   transform: rotate(-45deg);
   left: 50%;
@@ -301,7 +308,7 @@ li {
 }
 
 .marker-pin-red::after {
-  content: '';
+  content: "";
   width: 24px;
   height: 24px;
   margin: 3px 0 0 3px;
@@ -310,8 +317,7 @@ li {
   border-radius: 50%;
 }
 
-
-.marker-pin-green{
+.marker-pin-green {
   width: 30px;
   height: 30px;
   border-radius: 50% 50% 50% 0;
@@ -324,33 +330,33 @@ li {
 }
 
 .marker-pin-green::after {
-    content: '';
-    width: 24px;
-    height: 24px;
-    margin: 3px 0 0 3px;
-    background: #fff;
-    position: absolute;
-    border-radius: 50%;
- }
+  content: "";
+  width: 24px;
+  height: 24px;
+  margin: 3px 0 0 3px;
+  background: #fff;
+  position: absolute;
+  border-radius: 50%;
+}
 
- .pin-avatar{
-    width: 24px;
-    height: 24px;
-    margin: 3px 0 0 3px;
-    z-index: 1;
-    position: absolute;
-    border-radius: 50%;
-    transform: rotate(45deg);
- }
+.pin-avatar {
+  width: 24px;
+  height: 24px;
+  margin: 3px 0 0 3px;
+  z-index: 1;
+  position: absolute;
+  border-radius: 50%;
+  transform: rotate(45deg);
+}
 
- .logo{
+.logo {
   /* height: 300px; */
   width: 400px;
- }
+}
 
- .login-container{
+.login-container {
   /* position: absolute; */
   /* border: 10px solid red; */
   width: 100%;
   height: 100%;
- }
+}

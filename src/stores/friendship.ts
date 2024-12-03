@@ -58,6 +58,28 @@ export const useFriendshipStore = defineStore('friendship', () => {
     }
   }
 
+  const getFriendshipByUuid = async (user_uuid: string): Promise<Friend[] | undefined> => {
+    if (!user_uuid) {
+      console.error('@___ Missing uuid in payload')
+      return undefined
+    }
+
+    try {
+      const response = await appStore.handleApiRequest(appStore.api.get(`v1/friendships/${user_uuid}`))
+
+      if ('error' in response) {
+        console.error(`@___ Error on retrieving friendship :: ${response.error}`)
+        return undefined
+      }
+
+      console.log(`@___ Retrieved friendship successfully ::`, response.data)
+      return response.data as Friend[]
+    } catch (error) {
+      console.error(`@___ Unexpected error on retrieving friendship :: ${error}`)
+      return undefined
+    }
+  }
+
 
   const addFriend = async (payload: Friend): Promise<Friend | undefined> => {
     try {
@@ -72,6 +94,23 @@ export const useFriendshipStore = defineStore('friendship', () => {
       return response.data as Friend
     } catch (error) {
       console.error(`@___ Unexpected error on adding friendship :: ${error}`)
+      return undefined
+    }
+  }
+
+  const updateFriend = async (payload: Friend): Promise<Friend | undefined> => {
+    try {
+      const response = await appStore.handleApiRequest(appStore.api.put(`v1/friendships/${payload.uuid}`, payload))
+
+      if ('error' in response) {
+        console.error(`@___ Error on update friendship :: ${response.error}`)
+        return undefined
+      }
+
+      console.log(`@___ Added friendship successfully ::`, response.data)
+      return response.data as Friend
+    } catch (error) {
+      console.error(`@___ Unexpected error on update friendship :: ${error}`)
       return undefined
     }
   }
@@ -105,5 +144,7 @@ export const useFriendshipStore = defineStore('friendship', () => {
     getFriendByUserUuid,
     addFriend,
     deleteFriend,
+    updateFriend,
+    getFriendshipByUuid
   }
 })

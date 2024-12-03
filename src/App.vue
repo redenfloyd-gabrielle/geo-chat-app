@@ -4,7 +4,7 @@
 
 <script setup>
   import { useAppStore } from './stores/app';
-  import { onMounted } from 'vue';
+  import { onMounted, onUnmounted } from 'vue';
   import { useWsStore } from './stores/ws'
   import { useSeesionStore } from './stores/session';
 
@@ -21,11 +21,11 @@
     }
 
     wsStore.connect()
+    wsStore.joinChannel('geo-chat-ap')
 
     // appStore._generateFriends(5)
 
     // wsStore.connect()
-    // wsStore.joinChannel('test')
     // appStore._generateChannels(5)
     // appStore._generateMessage(20)
     // appStore.setRandomUser()
@@ -34,6 +34,11 @@
     //   const channel = appStore.channels[0]
     //   appStore.setChannel(channel)
     // }, 500);
+  })
+
+  onUnmounted(() => {
+    wsStore.leaveChannel('geo-chat-ap')
+    wsStore.disconnect('geo-chat-ap')
   })
 </script>
 
