@@ -89,6 +89,10 @@
   const addFriend = async (email: string) => {
     console.log('Friend email:', email)
 
+    if (appStore.user.email === email) {
+      alert('Invalid request!')
+    }
+
     const friendship = friendshipStore.friendships.find(f => f.user1?.email === email || f.user2?.email === email)
 
     if (friendship) {
