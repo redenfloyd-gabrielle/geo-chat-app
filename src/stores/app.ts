@@ -269,23 +269,25 @@ export const useAppStore = defineStore('app', () => {
   }
 
   const updateFriendships = (payload: Friend) => {
-    console.log('@@____ Update Friendship Request :: ', payload)
-    const idx = friendshipStore.friendships.findIndex(f => f.user1_uuid === user.value.uuid || f.user2_uuid === user.value.uuid)
-    if (idx != -1) {
-      friendshipStore.friendships[idx] = payload
-    }
-    else {
-      friendshipStore.friendships.push(payload)
-    }
+    console.log('@@____ Update Friendship Request :: ', payload, friendshipStore.friendships)
     if (payload.user2_uuid === user.value.uuid || payload.user1_uuid === user.value.uuid) {
-
+      const idx = friendshipStore.friendships.findIndex(f => f.uuid === payload.uuid)//(f.user1_uuid === user.value.uuid || f.user2_uuid === user.value.uuid) && (f.user1_uuid === payload.uuid || f.user2_uuid === payload.uuid))
+      if (idx != -1) {
+        friendshipStore.friendships[idx] = payload
+      }
+      else {
+        friendshipStore.friendships.push(payload)
+      }
     }
   }
 
   const removeFriendship = (payload: Friend) => {
-    const idx = friendshipStore.friendships.findIndex(f => f.user1_uuid === user.value.uuid || f.user2_uuid === user.value.uuid)
-    if (idx != -1) {
-      friendshipStore.friendships.splice(idx, 1)
+    console.log('@@____ Update Friendship Request :: ', payload, friendshipStore.friendships)
+    if (payload.user2_uuid === user.value.uuid || payload.user1_uuid === user.value.uuid) {
+      const idx = friendshipStore.friendships.findIndex(f => f.uuid === payload.uuid)
+      if (idx != -1) {
+        friendshipStore.friendships.splice(idx, 1)
+      }
     }
   }
 

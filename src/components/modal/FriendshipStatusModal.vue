@@ -4,7 +4,8 @@
             <h2 class="mb-1">{{ "Friend Request List" }}</h2>
             <div class="is-flex flex-gap-1" v-for="friend in appStore.friendshipRequestList">
                 <div class="is-flex align-items-center w-100">
-                    <label>{{ friend.user1?.fullname }}</label>
+                    <label v-if="friend.user1_uuid === appStore.user.uuid">{{ friend.user2?.fullname }}</label>
+                    <label v-if="friend.user2_uuid === appStore.user.uuid">{{ friend.user1?.fullname }}</label>
                 </div>
                 <div class="modal-actions">
                     <!-- Three button -->

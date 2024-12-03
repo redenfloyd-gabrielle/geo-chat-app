@@ -91,6 +91,7 @@
 
     if (appStore.user.email === email) {
       alert('Invalid request!')
+      return
     }
 
     const friendship = friendshipStore.friendships.find(f => f.user1?.email === email || f.user2?.email === email)
