@@ -22,7 +22,9 @@
       <div v-for="(msg, index) in appStore.selectedMessages" :key="index" class="message"
         :class="{ 'own-message': msg.user?.uuid === appStore.user.uuid }">
         <strong :class="{ 'own-message-name': msg.user?.uuid === appStore.user.uuid }" class="message-name">
-          {{ appStore.getUserFullname(msg.user?.uuid ?? '') }}</strong>
+          <!-- {{ appStore.getUserFullname(msg.user?.uuid ?? '') }} -->
+          {{ msg.user?.fullname }}
+        </strong>
         <span :class="{ 'own-message-content': msg.user?.uuid === appStore.user.uuid }" class="message-content"
           v-html="appStore.decryptMessages[index]">
         </span>
