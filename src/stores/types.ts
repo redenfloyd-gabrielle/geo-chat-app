@@ -85,6 +85,7 @@ export interface Session {
 }
 
 export interface Coordinates {
+  uuid?: string
   channel_uuid?: string,
   user_uuid?: string,
   latitude: number,
@@ -107,4 +108,11 @@ export interface WebsocketMessage {
 export interface Coords {
   latitude: number,
   longitude: number
+}
+
+
+export interface LocationRoute {
+  user_uuid?: string,
+  channel_uuid?: string,
+  waypoint: L.LatLng[]
 }
