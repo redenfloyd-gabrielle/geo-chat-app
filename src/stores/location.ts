@@ -151,12 +151,21 @@ export const useLocationStore = defineStore('location', () => {
     }
 
     try {
-      const response = await appStore.handleApiRequest(appStore.api.put(`/locations/${_location.uuid}`, payload))
+      const response = await appStore.handleApiRequest(appStore.api.put(`v1/locations/${_location.uuid}`, payload))
       if ('error' in response) {
         console.error(`@___ Error on updating location :: ${response.error}`)
         return undefined
       }
 
+      if(response.status == HTTP_RESPONSE_STATUS.SUCCESS) {
+     
+        const index = locations.value.findIndex(location => location.uuid == payload.uuid)
+        if(index !== -1){
+          thisLocation.value = response.data as Location
+          locations.value[index] = response.data 
+        }
+        
+      }
       console.log(`@___ Updated location successfully ::`, response.data)
       return response.data as Location
     } catch (error) {
