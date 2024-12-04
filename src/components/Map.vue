@@ -1,7 +1,7 @@
 <template>
   <div class="map-container">
     <Modal/>
-    <div :class="{'loading-screen':mapStore.isLoading || mapStore.isMarkerLoading}" id="map"></div>
+    <div :class="{'loading-screen':mapStore.isLoading}" id="map"></div>
   </div>
 </template>
 
