@@ -1,6 +1,6 @@
 import { defineStore } from "pinia"
 import { computed, ref, watch } from "vue"
-import type { Message, User, Channel, Session, Coordinates, _Marker, WebsocketMessage, Friend } from "./types"
+import type { Message, User, Channel, Session, Coordinates, _Marker, WebsocketMessage, Friend, Location } from "./types"
 import { CHANNEL_TYPE, FRIENDSHIP_STATUS, HTTP_RESPONSE_STATUS, LOGIN_STATUS, WS_EVENT } from "./types"
 import { faker } from "@faker-js/faker"
 import { useSecureStore } from "./secure"
@@ -14,6 +14,7 @@ import { useChannelStore } from "./channel"
 import { useWsStore } from "./ws"
 import { useMapStore } from "./map"
 import { useFriendshipStore } from "./friendship"
+import { useLocationStore } from "./location"
 
 const apiURL = import.meta.env.VITE_API_URL
 
@@ -24,6 +25,7 @@ export const useAppStore = defineStore('app', () => {
   const channelStore = useChannelStore()
   const wsStore = useWsStore()
   const mapStore = useMapStore()
+  const locationStore = useLocationStore()
   const friendshipStore = useFriendshipStore()
 
   const api = ref({} as AxiosInstance)
@@ -149,6 +151,8 @@ export const useAppStore = defineStore('app', () => {
     mapStore.coordinates = [] as Coordinates[]
     mapStore.markers = [] as _Marker[]
     mapStore.thisCoordinates = {} as Coordinates
+    locationStore.locations = [] as Location[]
+    locationStore.thisLocation =  {}  as Location
   }
 
   const setFriend = (payload: User) => {

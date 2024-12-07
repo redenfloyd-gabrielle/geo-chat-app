@@ -242,7 +242,7 @@ export const useMapStore = defineStore('map', () => {
       const avatar = L.divIcon({
         className: 'custom-div-icon',
         html:
-          `<div class='marker-pin-green5'> 
+          `<div class='marker-pin-green'> 
         <img class="pin-avatar" src="${coordinate.user_uuid === appStore.user.uuid ? appStore.user.image_url : appStore.getUserImage(coordinate.user_uuid as string)}" alt="Avatar">   
         </div>  
         `,
@@ -271,7 +271,7 @@ export const useMapStore = defineStore('map', () => {
     const name = marker.user_uuid === appStore.user.uuid
       ? 'Me'
       : appStore.getUserFullname(marker.user_uuid as string) || 'Stranger'
-      
+
     const address = await getLocation(lat, lng)
   
     marker.marker?.bindPopup(`
@@ -658,6 +658,7 @@ export const useMapStore = defineStore('map', () => {
     locationRoutes,
     coordsWatchId,
     isMapActive,
+    getCurrentPosition,
     getLocation,
     _generateFakeData,
     setCoordinatesState,

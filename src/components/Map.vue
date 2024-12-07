@@ -18,11 +18,13 @@
 
   onMounted(async() => {
     mapStore.isMapActive = true 
+    mapStore.coordsWatchId = undefined
     mapStore.mapInstance('map')
     await locationStore.getLocationsByChannel()
     // mapStore._generateFakeData(20)
   })
   onUnmounted(() =>{
+    mapStore.coordsWatchId = undefined
     mapStore.isMapActive = false
   })
 
