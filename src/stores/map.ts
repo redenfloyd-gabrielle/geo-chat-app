@@ -98,46 +98,58 @@ export const useMapStore = defineStore('map', () => {
   ];
 
   watchEffect(() => {
-    if (!isMapActive.value || !navigator.geolocation){
+    if (!navigator.geolocation || !isMapActive.value) {
       navigator.geolocation.clearWatch(coordsWatchId.value)
       return
     }
-      
-    console.log("USER UUID::", appStore.user.uuid)
-    console.log("CHANNEL UUID::", appStore.thisChannel.uuid)
-
+  
+    const { user, thisChannel } = appStore
+    const { uuid: userUUID } = user ?? {}
+    const { uuid: channelUUID } = thisChannel ??  {}
+  
+    if (!userUUID || !channelUUID) return
+  
+    console.log("USER UUID::", userUUID)
+    console.log("CHANNEL UUID::", channelUUID)
+  
     const location = locationStore.locations.find(
-      location => location.user_uuid === appStore.user.uuid && location.channel_uuid === appStore.thisChannel.uuid
+      loc => loc.user_uuid === userUUID && loc.channel_uuid === channelUUID
     )
-    
+  
     console.log("LOCATION::", location)
-
-    if (!location || !isCoordinateMoving.value){
-       navigator.geolocation.clearWatch(coordsWatchId.value)
-       return
-    }
+  
+    if (!location) return
   
     coordsWatchId.value = navigator.geolocation.watchPosition(
       async ({ coords: { latitude, longitude } }) => {
-        const payload = {
-          uuid: location?.uuid,
-          channel_uuid: appStore.thisChannel.uuid,
-          user_uuid: appStore.user.uuid,
-          latitude,
-          longitude,
-          weather: weather.value,
-        }
-        const response = await locationStore.updateLocation(payload)
-        if (response) {
-          thisCoordinates.value = { ...payload }
-          isLoading.value = false
+        try {
+          const payload = {
+            uuid: location.uuid,
+            channel_uuid: channelUUID,
+            user_uuid: userUUID,
+            latitude,
+            longitude,
+            weather: weather.value,
+          }
+  
+          const response = await locationStore.updateLocation(payload)
+          if (response) {
+            thisCoordinates.value = { ...payload }
+            isLoading.value = false
+          }
+        } catch (err) {
+          console.error("Error updating location:", err)
         }
       },
-      _error => { error.value = _error },
+      error => {
+        console.error("Geolocation error:", error)
+      },
       { maximumAge: 0, enableHighAccuracy: true }
     )
   })
   
+  
+
   watch(position.value, (value) => {
     // console.log("WATCH COORDS", value)
   })
@@ -209,6 +221,8 @@ export const useMapStore = defineStore('map', () => {
     console.log("markers")
     newMarkers.forEach((mark) => {
       const { user_uuid, channel_uuid, marker, location, weather } = mark
+
+      console.log("@____marker",marker)
       const _marker = {
         user_uuid,
         channel_uuid,
@@ -228,7 +242,7 @@ export const useMapStore = defineStore('map', () => {
       const avatar = L.divIcon({
         className: 'custom-div-icon',
         html:
-          `<div class='marker-pin-green'> 
+          `<div class='marker-pin-green5'> 
         <img class="pin-avatar" src="${coordinate.user_uuid === appStore.user.uuid ? appStore.user.image_url : appStore.getUserImage(coordinate.user_uuid as string)}" alt="Avatar">   
         </div>  
         `,
@@ -251,54 +265,52 @@ export const useMapStore = defineStore('map', () => {
   })
 
   const bindPopup = async (marker: _Marker) => {
-    const content = await Promise.all([
-      getWeather((marker.marker as any)._latlng.lat, (marker.marker as any)._latlng.lng),
-      marker.user_uuid === appStore.user.uuid ? "Me" : appStore.getUserFullname(marker.user_uuid as string) ?? "Stranger",
-      getLocation((marker.marker as any)._latlng.lat, (marker.marker as any)._latlng.lng)
-    ])
+    const lat = (marker.marker as any)._latlng.lat
+    const lng = (marker.marker as any)._latlng.lng
+    const weather = await getWeather(lat, lng)
+    const name = marker.user_uuid === appStore.user.uuid
+      ? 'Me'
+      : appStore.getUserFullname(marker.user_uuid as string) || 'Stranger'
+      
+    const address = await getLocation(lat, lng)
+  
     marker.marker?.bindPopup(`
       <div class="tooltip-container">
-        <div class="is-flex justify-content-end ">
+        <div class="is-flex justify-content-end">
           <div class="tooltip-weather">
-            ${content[0]}
+            ${weather}
           </div>
         </div>
         <div class="is-flex justify-content-center flex-direction-column align-items-center">
           <img class="p-1 img-avatar" src="${marker.user_uuid === appStore.user.uuid ? appStore.user.image_url : appStore.getUserImage(marker.user_uuid as string)}" alt="Avatar">
-          <h1 class="img-avatar-name"> ${content[1]}  </h1>
+          <h1 class="img-avatar-name">${name}</h1>
         </div>
         <div>
-         <h3>Address</h3>
-         </div>   
-        <div class="is-flex justify-content-center   align-items-center">
+          <h3>Address</h3>
+        </div>   
+        <div class="is-flex justify-content-center align-items-center">
           <span class="tooltip-address">
-            ${content[2]}
+            ${address}
           </span>
         </div>
       </div>
     `)
-    // if (marker.user_uuid == appStore.user.uuid) marker.marker?.openPopup()
-    // const avatar = L.icon({
-    //   iconUrl:  '/src/assets/pin-green1.png',
-    //   iconSize: [80, 80],
-    //   iconAnchor: [40, 65],
-    //   popupAnchor: [0, -50],
-    //   className: 'pin'
-    // })
+  
     const avatar = L.divIcon({
       className: 'custom-div-icon',
-      html:
-        `<div class='marker-pin-green'> 
-        <img class="pin-avatar" src="${marker.user_uuid === appStore.user.uuid ? appStore.user.image_url : appStore.getUserImage(marker.user_uuid as string)}" alt="Avatar">   
-        </div>  
-        `,
+      html: `
+        <div class='marker-pin-green'> 
+          <img class="pin-avatar" src="${marker.user_uuid === appStore.user.uuid ? appStore.user.image_url : appStore.getUserImage(marker.user_uuid as string)}" alt="Avatar">   
+        </div>
+      `,
       iconSize: [30, 42],
       iconAnchor: [15, 42],
-      popupAnchor: [0, -35],
+      popupAnchor: [0, -35]
     })
+  
     marker.marker?.setIcon(avatar)
-
   }
+  
 
   const getCurrentPosition = (): Promise<{ latitude: number; longitude: number }> => {
     return new Promise((resolve, reject) => {
@@ -315,7 +327,7 @@ export const useMapStore = defineStore('map', () => {
   }
 
   const sendMyLocation = async () => {
-
+    console.log("@_____CLICK SEND LOCATION")
     const { latitude, longitude } = await getCurrentPosition()
     console.log("CURRENT COORDS", latitude, longitude)
     weather.value = await getWeather(latitude, longitude) as string
@@ -340,6 +352,7 @@ export const useMapStore = defineStore('map', () => {
   }
 
   const removeMyLocation = async () => {
+    console.log("@_____CLICK REMOVE LOCATION")
     const idx = coordinates.value.findIndex(coord => coord.user_uuid === appStore.user.uuid && coord.channel_uuid == appStore.thisChannel.uuid)
     if (idx != -1) {
       const myLocation = locationStore.locations.find(location => location.user_uuid == coordinates.value[idx].user_uuid && location.channel_uuid == coordinates.value[index].channel_uuid) as Location
