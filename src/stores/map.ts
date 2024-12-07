@@ -98,55 +98,90 @@ export const useMapStore = defineStore('map', () => {
   ];
 
   watchEffect(() => {
-    if (!navigator.geolocation || !isMapActive.value) {
-      navigator.geolocation.clearWatch(coordsWatchId.value)
-      return
-    }
-  
-    const { user, thisChannel } = appStore
-    const { uuid: userUUID } = user ?? {}
-    const { uuid: channelUUID } = thisChannel ??  {}
-  
-    if (!userUUID || !channelUUID) return
-  
-    console.log("USER UUID::", userUUID)
-    console.log("CHANNEL UUID::", channelUUID)
-  
-    const location = locationStore.locations.find(
-      loc => loc.user_uuid === userUUID && loc.channel_uuid === channelUUID
-    )
-  
-    console.log("LOCATION::", location)
-  
-    if (!location) return
-  
+    if (!navigator.geolocation || !isMapActive.value) return
+    if (!isCoordinateMoving.value) return
+    
     coordsWatchId.value = navigator.geolocation.watchPosition(
-      async ({ coords: { latitude, longitude } }) => {
-        try {
-          const payload = {
-            uuid: location.uuid,
-            channel_uuid: channelUUID,
-            user_uuid: userUUID,
-            latitude,
-            longitude,
-            weather: weather.value,
-          }
-  
-          const response = await locationStore.updateLocation(payload)
-          if (response) {
-            thisCoordinates.value = { ...payload }
-            isLoading.value = false
-          }
-        } catch (err) {
-          console.error("Error updating location:", err)
+      async coordinates => {
+        console.log("WATCH COORDS", coordinates)
+        const { latitude, longitude } = coordinates.coords
+
+        const payload: Location = {
+          uuid: locationStore.locations.find(location => location.user_uuid == appStore.user.uuid && location.channel_uuid == appStore.thisChannel.uuid)?.uuid,
+          channel_uuid: appStore.thisChannel.uuid,
+          user_uuid: appStore.user.uuid,
+          latitude: latitude,
+          longitude: longitude,
+          weather: weather.value,
         }
-      },
-      error => {
-        console.error("Geolocation error:", error)
-      },
-      { maximumAge: 0, enableHighAccuracy: true }
-    )
+
+        await locationStore.updateLocation(payload).then((response) => {
+          if (response) {
+            thisCoordinates.value = { uuid: payload.uuid, user_uuid: appStore.user.uuid, channel_uuid: appStore.thisChannel.uuid, latitude: latitude, longitude: longitude }
+            isLoading.value = false
+            console.log("SUCCESSFULLY UPDATED")
+          }
+        })
+      }, _error => {
+        error.value = _error
+      }, {
+      maximumAge: 0,
+      enableHighAccuracy: true,
+    })
   })
+
+
+
+    // watchEffect(() => {
+  //   if (!navigator.geolocation || !isMapActive.value) {
+  //     navigator.geolocation.clearWatch(coordsWatchId.value)
+  //     return
+  //   }
+  
+  //   const { user, thisChannel } = appStore
+  //   const { uuid: userUUID } = user ?? {}
+  //   const { uuid: channelUUID } = thisChannel ??  {}
+  
+  //   if (!userUUID || !channelUUID) return
+  
+  //   console.log("USER UUID::", userUUID)
+  //   console.log("CHANNEL UUID::", channelUUID)
+  
+  //   const location = locationStore.locations.find(
+  //     loc => loc.user_uuid === userUUID && loc.channel_uuid === channelUUID
+  //   )
+  
+  //   console.log("LOCATION::", location)
+  
+  //   if (!location) return
+  
+  //   coordsWatchId.value = navigator.geolocation.watchPosition(
+  //     async ({ coords: { latitude, longitude } }) => {
+  //       try {
+  //         const payload = {
+  //           uuid: location.uuid,
+  //           channel_uuid: channelUUID,
+  //           user_uuid: userUUID,
+  //           latitude,
+  //           longitude,
+  //           weather: weather.value,
+  //         }
+  
+  //         const response = await locationStore.updateLocation(payload)
+  //         if (response) {
+  //           thisCoordinates.value = { ...payload }
+  //           isLoading.value = false
+  //         }
+  //       } catch (err) {
+  //         console.error("Error updating location:", err)
+  //       }
+  //     },
+  //     error => {
+  //       console.error("Geolocation error:", error)
+  //     },
+  //     { maximumAge: 0, enableHighAccuracy: true }
+  //   )
+  // })
   
   
 
