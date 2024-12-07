@@ -98,18 +98,24 @@ export const useMapStore = defineStore('map', () => {
   ];
 
   watchEffect(() => {
-    if (!navigator.geolocation) return
-    if (!isCoordinateMoving.value) return
+
+    const location_uuid = locationStore.locations.find(location => location.user_uuid == appStore.user.uuid && location.channel_uuid == appStore.thisChannel.uuid)?.uuid
+ 
+   
+    if (!navigator.geolocation) return 
+    if(!location_uuid) return navigator.geolocation.clearWatch(coordsWatchId.value)
+    if (!isCoordinateMoving.value) return navigator.geolocation.clearWatch(coordsWatchId.value)
     // const intervalId = setInterval(updateCoordinates, 2000); // Run every 2 seconds
     // Run every 2 seconds 
-
-    coordsWatchId.value = navigator.geolocation.watchPosition(
+       coordsWatchId.value = navigator.geolocation.watchPosition(
       async coordinates => {
         console.log("WATCH COORDS", coordinates)
         const { latitude, longitude } = coordinates.coords
 
+        
+        location 
         const payload: Location = {
-          uuid: locationStore.locations.find(location => location.user_uuid == appStore.user.uuid && location.channel_uuid == appStore.thisChannel.uuid)?.uuid,
+          uuid: location_uuid,
           channel_uuid: appStore.thisChannel.uuid,
           user_uuid: appStore.user.uuid,
           latitude: latitude,
