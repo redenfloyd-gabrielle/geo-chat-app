@@ -368,85 +368,102 @@ export const useMapStore = defineStore('map', () => {
 
   const getWeather = async (lat: number, long: number) => {
     const weatherAPI = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${long}&current_weather=true`
+  
     try {
-      return await fetch(weatherAPI).then(async (response) => {
-        const weather = await response.json()
-        if (weather) {
-          const weatherCondition = weather.current_weather.weathercode
-          let condition
-          switch (weatherCondition) {
-            case 0:
-              condition = 'Clear sky'
-              break
-            case 1:
-            case 2:
-              condition = 'Partly cloudy'
-              break
-            case 3:
-              condition = 'Cloudy'
-              break
-            case 45:
-            case 48:
-              condition = 'Fog'
-              break
-            case 51:
-            case 53:
-            case 55:
-              condition = 'Drizzle'
-              break
-            case 61:
-            case 63:
-            case 65:
-              condition = 'Rain'
-              break
-            case 66:
-            case 67:
-              condition = 'Freezing rain'
-              break
-            case 71:
-            case 73:
-            case 75:
-              condition = 'Snow'
-              break
-            case 80:
-            case 81:
-            case 82:
-              condition = 'Heavy rain showers'
-              break
-            case 85:
-            case 86:
-              condition = 'Heavy snow showers'
-              break
-            case 95:
-            case 96:
-            case 99:
-              condition = 'Thunderstorm'
-              break
-            default:
-              condition = ' Unknown'
-          }
-          return weather.current_weather.temperature + weather.current_weather_units.temperature + ' ' + condition
+      const response = await fetch(weatherAPI)
+  
+      if (!response.ok) {
+        throw new Error(`HTTP error! Status: ${response.status}`)
+      }
+  
+      const weather = await response.json()
+  
+      if (weather) {
+        const weatherCondition = weather.current_weather.weathercode
+        let condition
+  
+        switch (weatherCondition) {
+          case 0:
+            condition = 'Clear sky'
+            break
+          case 1:
+          case 2:
+            condition = 'Partly cloudy'
+            break
+          case 3:
+            condition = 'Cloudy'
+            break
+          case 45:
+          case 48:
+            condition = 'Fog'
+            break
+          case 51:
+          case 53:
+          case 55:
+            condition = 'Drizzle'
+            break
+          case 61:
+          case 63:
+          case 65:
+            condition = 'Rain'
+            break
+          case 66:
+          case 67:
+            condition = 'Freezing rain'
+            break
+          case 71:
+          case 73:
+          case 75:
+            condition = 'Snow'
+            break
+          case 80:
+          case 81:
+          case 82:
+            condition = 'Heavy rain showers'
+            break
+          case 85:
+          case 86:
+            condition = 'Heavy snow showers'
+            break
+          case 95:
+          case 96:
+          case 99:
+            condition = 'Thunderstorm'
+            break
+          default:
+            condition = 'Unknown'
         }
-      })
-    } catch (error) {
+  
+        return weather.current_weather.temperature + weather.current_weather_units.temperature + ' ' + condition
+      }
+    } catch (error: any) {
       return "Weather not found!"
     }
   }
+  
 
   const getLocation = async (lat: number, long: number) => {
     const locationAPI = `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${long}&format=json`
+    
     try {
-      return await fetch(locationAPI).then(async (response) => {
-        const location = await response.json()
-        if (location) {
-          return location.display_name
-        }
-      })
-    }
-    catch (error) {
+      const response = await fetch(locationAPI)
+    
+      if (!response.ok) {
+        throw new Error(`HTTP error! Status: ${response.status}`)
+      }
+    
+      const location = await response.json()
+    
+      if (location && location.display_name) {
+        return location.display_name
+      } else {
+        throw new Error("Location data is empty or invalid.")
+      }
+    } catch (error: any) {
       return "Place not found."
     }
   }
+  
 
   const _generateFakeData = async (length: number) => {
     const waypoints: L.LatLng[] = []
