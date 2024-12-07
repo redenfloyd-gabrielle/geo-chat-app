@@ -45,7 +45,7 @@ export const useMapStore = defineStore('map', () => {
   const sendLocationButtonLabel = computed(() => isMe.value ? "REMOVE LOCATION" : "SEND LOCATION")
   const isCoordinateMoving = computed(() => isMe.value ? true : false)
   const coordsWatchId = ref()
-
+  const isMapActive = ref(false)
   let index = 0;
   const _coordinates = [
     { latitude: 10.2508389, longitude: 123.8633616 },
@@ -98,85 +98,46 @@ export const useMapStore = defineStore('map', () => {
   ];
 
   watchEffect(() => {
-
-    const location_uuid = locationStore.locations.find(location => location.user_uuid == appStore.user.uuid && location.channel_uuid == appStore.thisChannel.uuid)?.uuid
-    console.log("LOCATION UUID::", appStore.user?.uuid)
-
-    if (!navigator.geolocation) return
-    if (!location_uuid) return navigator.geolocation.clearWatch(coordsWatchId.value)
-    if (!isCoordinateMoving.value) return navigator.geolocation.clearWatch(coordsWatchId.value)
-    // const intervalId = setInterval(updateCoordinates, 2000); // Run every 2 seconds
-    // Run every 2 seconds 
-  
-    if (location_uuid) {
-
-      coordsWatchId.value = navigator.geolocation.watchPosition(
-        async coordinates => {
-          console.log("WATCH COORDS", coordinates)
-          console.log("USER UUID::", appStore.user.uuid)
-       
-          const { latitude, longitude } = coordinates.coords
-
-          const payload: Location = {
-            uuid: location_uuid,
-            channel_uuid: appStore.thisChannel.uuid,
-            user_uuid: appStore.user.uuid,
-            latitude: latitude,
-            longitude: longitude,
-            weather: weather.value,
-          }
-
-          await locationStore.updateLocation(payload).then((response) => {
-            if (response) {
-              thisCoordinates.value = { uuid: payload.uuid, user_uuid: appStore.user.uuid, channel_uuid: appStore.thisChannel.uuid, latitude: latitude, longitude: longitude }
-              isLoading.value = false
-              console.log("SUCCESSFULLY UPDATED")
-            }
-          })
-        }, _error => {
-          error.value = _error
-        }, {
-        maximumAge: 0,
-        enableHighAccuracy: true,
-      })
+    if (!isMapActive.value || !navigator.geolocation){
+      navigator.geolocation.clearWatch(coordsWatchId.value)
+      return
     }
-    // setInterval( () =>{
-    //   navigator.geolocation.getCurrentPosition(coordinates =>{
-    //     console.log("set time interval",coordinates.coords.latitude, coordinates.coords.longitude)
-    //   })
-    //   console.log("count")
+      
+    console.log("USER UUID::", appStore.user.uuid)
+    console.log("CHANNEL UUID::", appStore.thisChannel.uuid)
 
-    // }, 3000)
+    const location = locationStore.locations.find(
+      location => location.user_uuid === appStore.user.uuid && location.channel_uuid === appStore.thisChannel.uuid
+    )
+    
+    console.log("LOCATION::", location)
+
+    if (!location || !isCoordinateMoving.value){
+       navigator.geolocation.clearWatch(coordsWatchId.value)
+       return
+    }
+  
+    coordsWatchId.value = navigator.geolocation.watchPosition(
+      async ({ coords: { latitude, longitude } }) => {
+        const payload = {
+          uuid: location?.uuid,
+          channel_uuid: appStore.thisChannel.uuid,
+          user_uuid: appStore.user.uuid,
+          latitude,
+          longitude,
+          weather: weather.value,
+        }
+        const response = await locationStore.updateLocation(payload)
+        if (response) {
+          thisCoordinates.value = { ...payload }
+          isLoading.value = false
+        }
+      },
+      _error => { error.value = _error },
+      { maximumAge: 0, enableHighAccuracy: true }
+    )
   })
-
-  // const updateCoordinates = async () => {
-  //   if (index < _coordinates.length) {
-  //     const { latitude, longitude } = _coordinates[index];
-  //     console.log(`(${latitude}, ${longitude})`);
-
-  //     const payload: Location = {
-  //       uuid: locationStore.locations.find(location =>location.user_uuid == appStore.user.uuid)?.uuid,
-  //       channel_uuid: appStore.thisChannel.uuid,
-  //       user_uuid: appStore.user.uuid,
-  //       latitude: latitude,
-  //       longitude: longitude,
-  //       weather: weather.value,
-  //     }
-
-  //     await locationStore.updateLocation(payload).then((response) => {
-  //       if (response) {
-  //         thisCoordinates.value = {uuid: payload.uuid, user_uuid: appStore.user.uuid, channel_uuid: appStore.thisChannel.uuid, latitude: latitude, longitude: longitude }
-  //         isWatchLocation.value = true
-  //         isLoading.value = false
-  //         console.log("SUCCESSFULLY UPDATED")
-  //       }
-  //     })
-  //     index++;
-  //   } else {
-  //     // clearInterval(intervalId); // Stop the interval once all coordinates are used
-  //   }
-  // };
-
+  
   watch(position.value, (value) => {
     // console.log("WATCH COORDS", value)
   })
@@ -683,6 +644,7 @@ export const useMapStore = defineStore('map', () => {
     isWatchLocation,
     locationRoutes,
     coordsWatchId,
+    isMapActive,
     getLocation,
     _generateFakeData,
     setCoordinatesState,

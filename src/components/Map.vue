@@ -17,10 +17,13 @@
   const locationStore = useLocationStore()
 
   onMounted(async() => {
+    mapStore.isMapActive = true 
     mapStore.mapInstance('map')
     await locationStore.getLocationsByChannel()
     // mapStore._generateFakeData(20)
-   
+  })
+  onUnmounted(() =>{
+    mapStore.isMapActive = false
   })
 
 </script>
