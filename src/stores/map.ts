@@ -40,7 +40,7 @@ export const useMapStore = defineStore('map', () => {
 
   let sendLocationButtonElement: HTMLButtonElement | null = null
 
-  const isMe = computed(() => coordinates.value.some(coords => coords.user_uuid === appStore.user.uuid))
+  const isMe = computed(() => coordinates.value.some(coords => coords.user_uuid === appStore.user.uuid && coords.channel_uuid == appStore.thisChannel.uuid))
   const isMarkerLoading = computed(() => coordinates.value.length !== markers.value.length)
   const sendLocationButtonLabel = computed(() => isMe.value ? "REMOVE LOCATION" : "SEND LOCATION")
   const isCoordinateMoving = computed(() => isMe.value ? true : false)
@@ -109,7 +109,7 @@ export const useMapStore = defineStore('map', () => {
         const { latitude, longitude } = coordinates.coords
 
         const payload: Location = {
-          uuid: locationStore.locations.find(location => location.user_uuid == appStore.user.uuid)?.uuid,
+          uuid: locationStore.locations.find(location => location.user_uuid == appStore.user.uuid && location.channel_uuid == appStore.thisChannel.uuid)?.uuid,
           channel_uuid: appStore.thisChannel.uuid,
           user_uuid: appStore.user.uuid,
           latitude: latitude,
@@ -253,7 +253,7 @@ export const useMapStore = defineStore('map', () => {
 
   watch(coordinates, (coordinates) => {
     console.log("coordinates")
-    coordinates.filter(coordinate => !markers.value.some(mark => mark.user_uuid === coordinate.user_uuid)).map((coordinate) => {
+    coordinates.filter(coordinate => !markers.value.some(mark => mark.user_uuid === coordinate.user_uuid && mark.channel_uuid == coordinate.channel_uuid)).map((coordinate) => {
 
       const avatar = L.divIcon({
         className: 'custom-div-icon',
@@ -269,7 +269,7 @@ export const useMapStore = defineStore('map', () => {
 
       const marker = L.marker([coordinate.latitude, coordinate.longitude],).addTo(map.value as L.Map)
       marker.setIcon(avatar)
-      const mark = { user_uuid: coordinate.user_uuid, marker: marker } as _Marker
+      const mark = { user_uuid: coordinate.user_uuid, channel_uuid: coordinate.channel_uuid, marker: marker } as _Marker
       markers.value = [mark, ...markers.value]
     })
   }, { deep: true })
@@ -370,9 +370,9 @@ export const useMapStore = defineStore('map', () => {
   }
 
   const removeMyLocation = async () => {
-    const idx = coordinates.value.findIndex(coord => coord.user_uuid === appStore.user.uuid)
+    const idx = coordinates.value.findIndex(coord => coord.user_uuid === appStore.user.uuid && coord.channel_uuid == appStore.thisChannel.uuid)
     if (idx != -1) {
-      const myLocation = locationStore.locations.find(location => location.user_uuid == coordinates.value[idx].user_uuid) as Location
+      const myLocation = locationStore.locations.find(location => location.user_uuid == coordinates.value[idx].user_uuid && location.channel_uuid == coordinates.value[index].channel_uuid) as Location
       await locationStore.deleteLocation(myLocation).then(async () => {
         map.value?.setView([10.31672, 123.89071])
         thisCoordinates.value = {} as Coordinates
@@ -527,11 +527,11 @@ export const useMapStore = defineStore('map', () => {
     const { latitude, longitude, user_uuid, channel_uuid } = payload
 
     if (latitude && longitude) {
-      if (coordinates.value.some(coords => coords.user_uuid == user_uuid)) {
-        const idx = coordinates.value.findIndex(coord => coord.user_uuid === user_uuid)
+      if (coordinates.value.some(coords => coords.user_uuid == user_uuid && coords.channel_uuid == channel_uuid)) {
+        const idx = coordinates.value.findIndex(coord => coord.user_uuid === user_uuid && coord.channel_uuid == channel_uuid)
         coordinates.value.splice(idx, 1)
 
-        const markerIndex = markers.value.findIndex(marker => marker.user_uuid === user_uuid)
+        const markerIndex = markers.value.findIndex(marker => marker.user_uuid === user_uuid && marker.channel_uuid === channel_uuid)
         if (markerIndex !== -1) {
           markers.value[markerIndex].marker?.remove()
           markers.value.splice(markerIndex, 1)
@@ -601,10 +601,10 @@ export const useMapStore = defineStore('map', () => {
       return
     }
 
-    const idx = coordinates.value.findIndex(coord => coord.user_uuid === user_uuid)
+    const idx = coordinates.value.findIndex(coord => coord.user_uuid === user_uuid && coord.channel_uuid === channel_uuid)
     if (idx === -1) return
 
-    const markerIndex = markers.value.findIndex(marker => marker.user_uuid === user_uuid)
+    const markerIndex = markers.value.findIndex(marker => marker.user_uuid === user_uuid && marker.channel_uuid == channel_uuid)
     if (markerIndex !== -1) {
       markers.value[markerIndex].marker?.remove()
       markers.value.splice(markerIndex, 1)
