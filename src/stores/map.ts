@@ -98,7 +98,7 @@ export const useMapStore = defineStore('map', () => {
   ];
 
   watchEffect(() => {
-    if (!navigator.geolocation || !isMapActive.value) return
+    if (!navigator.geolocation) return
     if (!isCoordinateMoving.value) return
     
     coordsWatchId.value = navigator.geolocation.watchPosition(
@@ -272,7 +272,7 @@ export const useMapStore = defineStore('map', () => {
 
   watch(coordinates, (coordinates) => {
     console.log("coordinates")
-    coordinates.filter(coordinate => !markers.value.some(mark => mark.user_uuid === coordinate.user_uuid && mark.channel_uuid == coordinate.channel_uuid)).map((coordinate) => {
+    coordinates.filter(coordinate => !markers.value.some(mark => mark.user_uuid === coordinate.user_uuid)).map((coordinate) => {
 
       const avatar = L.divIcon({
         className: 'custom-div-icon',
