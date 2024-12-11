@@ -15,8 +15,9 @@
         </div>
 
         <div class="modal-actions">
-          <button type="submit" class="btn btn-primary" :class="{ 'btn-danger': isEditMode }">{{ isEditMode ?
-            "Unfriend" : "Add Friend" }}</button>
+          <button type="submit" class="btn btn-primary" :class="{ 'btn-danger': isEditMode }"
+            :disabled="!isEmailAddressExists">{{ isEditMode ?
+              "Unfriend" : "Add Friend" }}</button>
           <button type="button" class="btn btn-secondary" @click="closeModal">
             Cancel
           </button>
@@ -48,6 +49,10 @@
   const closeModal = () => {
     emit('close')
   }
+
+  const isEmailAddressExists = computed(() => {
+    return userStore.users.some(user => user.email === friendEmail.value)
+  })
 
   // Handle adding a friend
   const handleAddFriend = () => {
@@ -106,5 +111,12 @@
   .btn-danger {
     background-color: #dc3545;
     color: white;
+  }
+
+  .btn.disabled,
+  .btn:disabled {
+    background-color: #ccc;
+    cursor: not-allowed;
+    color: #6c757d;
   }
 </style>
